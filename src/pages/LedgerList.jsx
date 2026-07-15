@@ -181,20 +181,14 @@ const LedgerList = () => {
                   <td style={{ padding: '12px 16px', color: 'var(--color-on-surface)' }}>{ledger.balanceType}</td>
                   <td style={{ padding: '12px 16px' }}>{renderStatus(ledger.activeStatus)}</td>
                   <td style={{ padding: '12px 16px' }}>
-                    {ledger.isSystem === 1 ? (
-                      <span style={{ color: 'var(--color-outline)', display: 'flex', alignItems: 'center', gap: '4px', fontSize: '12px' }}>
-                        <i className="fa-solid fa-lock" style={{ fontSize: '11px' }}></i> System
-                      </span>
-                    ) : (
-                      <div style={{ display: 'flex', gap: '8px' }}>
-                        <Link to={`/ledger/edit/${ledger.ledgerId}`} style={{ backgroundColor: '#f1f5f9', color: '#0ea5e9', border: '1px solid #e2e8f0', borderRadius: '4px', width: '28px', height: '28px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', textDecoration: 'none' }}>
-                          <i className="fa-solid fa-pencil" style={{ fontSize: '12px' }}></i>
-                        </Link>
-                        <button onClick={() => handleDelete(ledger.ledgerId)} style={{ backgroundColor: '#fef2f2', color: '#ef4444', border: '1px solid #fee2e2', borderRadius: '4px', width: '28px', height: '28px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
-                          <i className="fa-solid fa-trash-can" style={{ fontSize: '12px' }}></i>
-                        </button>
-                      </div>
-                    )}
+                    <div style={{ display: 'flex', gap: '8px' }}>
+                      <Link to={`/ledger/edit/${ledger.ledgerId}`} style={{ backgroundColor: '#f1f5f9', color: '#0ea5e9', border: '1px solid #e2e8f0', borderRadius: '4px', width: '28px', height: '28px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', textDecoration: 'none' }}>
+                        <i className="fa-solid fa-pencil" style={{ fontSize: '12px' }}></i>
+                      </Link>
+                      <button onClick={() => handleDelete(ledger.ledgerId)} style={{ backgroundColor: '#fef2f2', color: '#ef4444', border: '1px solid #fee2e2', borderRadius: '4px', width: '28px', height: '28px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
+                        <i className="fa-solid fa-trash-can" style={{ fontSize: '12px' }}></i>
+                      </button>
+                    </div>
                   </td>
                 </tr>
               )) : (
