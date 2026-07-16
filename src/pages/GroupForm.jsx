@@ -224,7 +224,7 @@ const GroupForm = () => {
           <div>
             <div style={sectionHeaderStyle}>General Information</div>
             <div style={sectionBodyStyle}>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px', marginBottom: '24px' }}>
+              <div className="form-grid-2" style={{ marginBottom: '24px' }}>
                 <div>
                   <label style={labelStyle}>Group Name <span style={{ color: 'var(--color-error)' }}>*</span></label>
                   <input
@@ -250,7 +250,7 @@ const GroupForm = () => {
                 </div>
               </div>
 
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px', marginBottom: '24px' }}>
+              <div className="form-grid-2" style={{ marginBottom: '24px' }}>
                 <div>
                   <label style={labelStyle}>Parent Group</label>
                   <Select
@@ -322,7 +322,7 @@ const GroupForm = () => {
         </div>
 
         {/* Footer Actions */}
-        <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '16px', marginTop: '32px', paddingBottom: '32px' }}>
+        <div className="form-actions-row" style={{ paddingBottom: '32px' }}>
           <Link
             to="/group"
             style={{

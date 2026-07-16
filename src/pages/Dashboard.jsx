@@ -70,10 +70,10 @@ const Dashboard = () => {
 
   return (
     <>
-      <main className="layout-content" style={{ padding: '32px' }}>
+      <div style={{ display: 'flex', flexDirection: 'column' }}>
 
         {/* Dashboard Header & Controls */}
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '32px' }}>
+        <div className="dashboard-header-row">
           <div>
             <h1 className="text-display-lg" style={{ margin: 0, fontSize: '24px', color: 'var(--color-on-surface)' }}>Dashboard Overview</h1>
             <p style={{ margin: '4px 0 0', color: 'var(--color-on-surface-variant)', fontSize: '14px' }}>Real-time enterprise metrics and system status.</p>
@@ -149,7 +149,7 @@ const Dashboard = () => {
         )}
 
         {/* KPI Cards Row */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '20px', marginBottom: '24px' }}>
+        <div className="dashboard-kpi-grid">
 
           {/* Card 1 */}
           <div style={{ backgroundColor: '#fff', borderRadius: '12px', padding: '24px', border: '1px solid var(--color-border-structural)', display: 'flex', flexDirection: 'column' }}>
@@ -207,7 +207,7 @@ const Dashboard = () => {
         </div>
 
         {/* Main Grid: Chart & Quick Actions */}
-        <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '24px', marginBottom: '24px' }}>
+        <div className="dashboard-main-grid">
 
           {/* Chart Card */}
           <div style={{ backgroundColor: '#fff', borderRadius: '12px', border: '1px solid var(--color-border-structural)', display: 'flex', flexDirection: 'column' }}>
@@ -350,7 +350,7 @@ const Dashboard = () => {
             </table>
           </div>
         </div>
-      </main>
+      </div>
     </>
   );
 };

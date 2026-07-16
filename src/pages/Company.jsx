@@ -172,7 +172,7 @@ const Company = () => {
 
   return (
     <>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
+      <div className="dashboard-header-row">
         <div>
           <h1 className="text-display-lg" style={{ margin: 0, fontSize: '24px', color: 'var(--color-on-surface)' }}>Company Master</h1>
           <p style={{ margin: '4px 0 0', color: 'var(--color-on-surface-variant)', fontSize: '14px' }}>Manage organizational hierarchy and regulatory details.</p>
@@ -192,7 +192,7 @@ const Company = () => {
         </div>
       )}
 
-      <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '24px' }}>
+      <div className="dashboard-main-grid">
         
         {/* Left Column Forms */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
@@ -223,7 +223,7 @@ const Company = () => {
                     <textarea name="fullAddress" value={formData.fullAddress} onChange={handleChange} rows="3" style={{ width: '100%', padding: '10px 12px', borderRadius: '6px', border: '1px solid var(--color-border-structural)', resize: 'vertical', fontFamily: 'inherit' }}></textarea>
                  </div>
                  
-                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+                 <div className="form-grid-2">
                     <div>
                        <label style={{ display: 'block', fontSize: '13px', fontWeight: '600', color: 'var(--color-on-surface)', marginBottom: '8px' }}>City</label>
                        <input type="text" name="cityName" value={formData.cityName} onChange={handleChange} style={{ width: '100%', padding: '10px 12px', borderRadius: '6px', border: '1px solid var(--color-border-structural)' }} />

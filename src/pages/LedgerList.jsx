@@ -99,7 +99,7 @@ const LedgerList = () => {
       <div style={{ backgroundColor: '#f8f9fa', minHeight: '100%', padding: '24px' }}>
 
         {/* Header */}
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+        <div className="dashboard-header-row" style={{ marginBottom: '16px' }}>
           <div style={{ fontSize: '14px', fontWeight: '500' }}>
             <span style={{ color: 'var(--color-primary)' }}>Ledger Master</span>
             <span style={{ color: 'var(--color-on-surface-variant)', margin: '0 8px' }}>&gt;</span>
@@ -127,7 +127,7 @@ const LedgerList = () => {
         <div style={{ height: '1px', backgroundColor: 'var(--color-border-structural)', marginBottom: '24px' }}></div>
 
         {/* Filters */}
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: '16px' }}>
+        <div className="list-filters-row">
           <div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
               <select

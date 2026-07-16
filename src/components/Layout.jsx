@@ -32,12 +32,20 @@ const Layout = ({ children }) => {
 
 
 
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+
   return (
     <div className="layout-app" style={{ backgroundColor: '#f5f7fb' }}>
-      <Sidebar menus={menus} />
+      <Sidebar menus={menus} isMobileOpen={isSidebarOpen} onCloseMobile={() => setIsSidebarOpen(false)} />
+      {isSidebarOpen && (
+        <div 
+          className="sidebar-backdrop"
+          onClick={() => setIsSidebarOpen(false)}
+        />
+      )}
       <div className="layout-main-wrapper">
-        <Header />
-        <main className="layout-content" style={{ padding: '32px', overflowY: 'auto' }}>
+        <Header onToggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)} />
+        <main className="layout-content">
           {children}
         </main>
       </div>

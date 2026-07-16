@@ -105,7 +105,7 @@ const SalesVoucherList = () => {
       <div style={{ backgroundColor: '#f8f9fa', minHeight: '100%', padding: '24px' }}>
 
         {/* Header */}
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+        <div className="dashboard-header-row" style={{ marginBottom: '16px' }}>
           <div style={{ fontSize: '18px', fontWeight: '700', color: 'var(--color-on-surface)' }}>Sales Voucher</div>
           <Link
             to="/Sales/create"
@@ -129,7 +129,7 @@ const SalesVoucherList = () => {
         <div style={{ height: '1px', backgroundColor: 'var(--color-border-structural)', marginBottom: '24px' }}></div>
 
         {/* Filters */}
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: '16px' }}>
+        <div className="list-filters-row">
           <div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
               <select

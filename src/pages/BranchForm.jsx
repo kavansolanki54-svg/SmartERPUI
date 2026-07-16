@@ -243,7 +243,7 @@ const BranchForm = () => {
           <div>
             <div style={sectionHeaderStyle}>General Information</div>
             <div style={sectionBodyStyle}>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px', marginBottom: '24px' }}>
+              <div className="form-grid-2" style={{ marginBottom: '24px' }}>
                 <div>
                   <label style={labelStyle}>Branch Name <span style={{ color: 'var(--color-error)' }}>*</span></label>
                   <input type="text" name="branchName" value={formData.branchName} onChange={handleChange} style={getInputStyle('branchName')} placeholder="e.g. Mumbai Corporate" />
@@ -256,7 +256,7 @@ const BranchForm = () => {
                 </div>
               </div>
 
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px', marginBottom: '24px' }}>
+              <div className="form-grid-2" style={{ marginBottom: '24px' }}>
                 <div>
                   <label style={labelStyle}>Email Address <span style={{ color: 'var(--color-error)' }}>*</span></label>
                   <input type="email" name="emailAddress" value={formData.emailAddress} onChange={handleChange} style={getInputStyle('emailAddress')} placeholder="branch@smarterp.com" />
@@ -269,7 +269,7 @@ const BranchForm = () => {
                 </div>
               </div>
 
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px' }}>
+              <div className="form-grid-2">
                 <div>
                   <label style={labelStyle}>Phone No.</label>
                   <input type="text" name="phoneNo" value={formData.phoneNo} onChange={handleChange} style={inputStyle} placeholder="022 1234 5678" />
@@ -282,7 +282,7 @@ const BranchForm = () => {
           <div>
             <div style={sectionHeaderStyle}>Address Details</div>
             <div style={sectionBodyStyle}>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '24px', marginBottom: '24px' }}>
+              <div className="form-grid-3" style={{ marginBottom: '24px' }}>
                 <div>
                   <label style={labelStyle}>Branch Country <span style={{ color: 'var(--color-error)' }}>*</span></label>
                   <Select
@@ -360,7 +360,7 @@ const BranchForm = () => {
         </div>
 
         {/* Footer Actions */}
-        <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '16px', marginTop: '32px' }}>
+        <div className="form-actions-row">
           <Link to="/branch" style={{ backgroundColor: '#fff', color: 'var(--color-on-surface-variant)', padding: '10px 24px', borderRadius: '4px', border: '1px solid var(--color-border-structural)', fontWeight: '600', fontSize: '13px', cursor: 'pointer', textDecoration: 'none' }}>
             Cancel
           </Link>

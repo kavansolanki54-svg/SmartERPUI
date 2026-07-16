@@ -279,7 +279,7 @@ const LedgerForm = () => {
           <div>
             <div style={sectionHeaderStyle}>General Information</div>
             <div style={sectionBodyStyle}>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '24px', marginBottom: '24px' }}>
+              <div className="form-grid-3" style={{ marginBottom: '24px' }}>
                 <div>
                   <label style={labelStyle}>Ledger Name <span style={{ color: 'var(--color-error)' }}>*</span></label>
                   <input
@@ -321,7 +321,7 @@ const LedgerForm = () => {
                 </div>
               </div>
 
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '24px', marginBottom: '24px' }}>
+              <div className="form-grid-3" style={{ marginBottom: '24px' }}>
                 <div>
                   <label style={labelStyle}>Opening Balance</label>
                   <input
@@ -406,7 +406,7 @@ const LedgerForm = () => {
           <div>
             <div style={sectionHeaderStyle}>Contact Details</div>
             <div style={sectionBodyStyle}>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '24px', marginBottom: '24px' }}>
+              <div className="form-grid-3" style={{ marginBottom: '24px' }}>
                 <div>
                   <label style={labelStyle}>Mailing Name</label>
                   <input type="text" name="mailingName" value={formData.mailingName} onChange={handleChange} style={inputStyle} />
@@ -421,7 +421,7 @@ const LedgerForm = () => {
                 </div>
               </div>
 
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '24px', marginBottom: '24px' }}>
+              <div className="form-grid-3" style={{ marginBottom: '24px' }}>
                 <div>
                   <label style={labelStyle}>Address 1</label>
                   <input type="text" name="address1" value={formData.address1} onChange={handleChange} style={inputStyle} />
@@ -436,7 +436,7 @@ const LedgerForm = () => {
                 </div>
               </div>
 
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '24px', marginBottom: '24px' }}>
+              <div className="form-grid-3" style={{ marginBottom: '24px' }}>
                 <div>
                   <label style={labelStyle}>City</label>
                   <input type="text" name="city" value={formData.city} onChange={handleChange} style={inputStyle} />
@@ -451,7 +451,7 @@ const LedgerForm = () => {
                 </div>
               </div>
 
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '24px' }}>
+              <div className="form-grid-3">
                 <div>
                   <label style={labelStyle}>Pincode</label>
                   <input type="text" name="pincode" value={formData.pincode} onChange={handleChange} style={inputStyle} />
@@ -472,7 +472,7 @@ const LedgerForm = () => {
           <div>
             <div style={sectionHeaderStyle}>Tax Details</div>
             <div style={sectionBodyStyle}>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '24px' }}>
+              <div className="form-grid-3">
                 <div>
                   <label style={labelStyle}>PAN No</label>
                   <input type="text" name="panNo" value={formData.panNo} onChange={handleChange} style={inputStyle} />
@@ -507,7 +507,7 @@ const LedgerForm = () => {
               </div>
 
               {formData.isBankDetailsRequired && (
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '24px' }}>
+                <div className="form-grid-3">
                   <div>
                     <label style={labelStyle}>Bank Name</label>
                     <input type="text" name="bankName" value={formData.bankName} onChange={handleChange} style={inputStyle} />
@@ -532,7 +532,7 @@ const LedgerForm = () => {
         </div>
 
         {/* Footer Actions */}
-        <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '16px', marginTop: '32px', paddingBottom: '32px' }}>
+        <div className="form-actions-row" style={{ paddingBottom: '32px' }}>
           <Link
             to="/ledger"
             style={{

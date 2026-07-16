@@ -215,7 +215,7 @@ const RoleForm = () => {
           <div>
             <div style={sectionHeaderStyle}>General Information</div>
             <div style={sectionBodyStyle}>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px', marginBottom: '24px' }}>
+              <div className="form-grid-2" style={{ marginBottom: '24px' }}>
                 <div>
                   <label style={labelStyle}>Role Name <span style={{ color: 'var(--color-error)' }}>*</span></label>
                   <input type="text" name="roleName" value={formData.roleName} onChange={handleChange} style={getInputStyle('roleName')} placeholder="e.g. Admin" />
@@ -254,7 +254,7 @@ const RoleForm = () => {
         </div>
 
         {/* Footer Actions */}
-        <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '16px', marginTop: '32px' }}>
+        <div className="form-actions-row">
           <Link to="/role" style={{ backgroundColor: '#fff', color: 'var(--color-on-surface-variant)', padding: '10px 24px', borderRadius: '4px', border: '1px solid var(--color-border-structural)', fontWeight: '600', fontSize: '13px', cursor: 'pointer', textDecoration: 'none' }}>
             Cancel
           </Link>

@@ -113,7 +113,7 @@ const PaymentVoucherList = () => {
       <div style={{ backgroundColor: '#f8f9fa', minHeight: '100%', padding: '24px' }}>
 
         {/* Header */}
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+        <div className="dashboard-header-row" style={{ marginBottom: '16px' }}>
           <div style={{ fontSize: '18px', fontWeight: '700', color: 'var(--color-on-surface)' }}>Payment Voucher</div>
           <Link
             to="/Payment/create"
@@ -137,7 +137,7 @@ const PaymentVoucherList = () => {
         <div style={{ height: '1px', backgroundColor: 'var(--color-border-structural)', marginBottom: '24px' }}></div>
 
         {/* Filters */}
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: '16px' }}>
+        <div className="list-filters-row">
           <div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
               <select

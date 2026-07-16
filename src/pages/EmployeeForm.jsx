@@ -392,7 +392,7 @@ const EmployeeForm = () => {
             <div style={sectionBodyStyle}>
 
               {/* Row 1: EMPLOYEE CODE | FIRST NAME * | MIDDLE NAME | LAST NAME */}
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: '24px', marginBottom: '24px' }}>
+              <div className="form-grid-4" style={{ marginBottom: '24px' }}>
                 <div>
                   <label style={labelStyle}>Employee Code</label>
                   <input
@@ -442,7 +442,7 @@ const EmployeeForm = () => {
               </div>
 
               {/* Row 2: GENDER | ROLE NAME * | EMAIL ADDRESS * | PASSWORD */}
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: '24px', marginBottom: '24px' }}>
+              <div className="form-grid-4" style={{ marginBottom: '24px' }}>
                 <div>
                   <label style={labelStyle}>Gender</label>
                   <Select
@@ -576,7 +576,7 @@ const EmployeeForm = () => {
         </div>
 
         {/* Footer Actions */}
-        <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '16px', marginTop: '32px', paddingBottom: '32px' }}>
+        <div className="form-actions-row" style={{ paddingBottom: '32px' }}>
           <Link
             to="/employee"
             style={{

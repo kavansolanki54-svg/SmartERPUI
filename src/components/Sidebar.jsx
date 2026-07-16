@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 
-const MenuItem = ({ menu, activePath }) => {
+const MenuItem = ({ menu, activePath, onCloseMobile }) => {
   const navigate = useNavigate();
   // Helper to normalize URLs for matching
   const normalize = (path) => (path ? (path.startsWith('/') ? path : `/${path}`).toLowerCase() : '');
@@ -54,13 +54,14 @@ const MenuItem = ({ menu, activePath }) => {
         >
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
             <i className={getIconClass(menu.icon)} style={{ width: '16px', textAlign: 'center', fontSize: '14px', color: isActive ? 'rgba(255,255,255,0.9)' : 'inherit' }}></i>
-            <span>{menu.name}</span>
+            <span className="sidebar-link-text">{menu.name}</span>
           </div>
-          <i className={`fa-solid fa-chevron-${isOpen ? 'up' : 'down'}`} style={{ fontSize: '10px', opacity: isActive ? 0.9 : 0.5 }}></i>
+          <i className={`fa-solid fa-chevron-${isOpen ? 'up' : 'down'} sidebar-chevron`} style={{ fontSize: '10px', opacity: isActive ? 0.9 : 0.5 }}></i>
         </div>
       ) : (
         <Link
           to={menu.url.startsWith('/') ? menu.url : `/${menu.url}`}
+          onClick={onCloseMobile}
           style={{
             display: 'flex',
             alignItems: 'center',
@@ -83,17 +84,20 @@ const MenuItem = ({ menu, activePath }) => {
         >
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
             <i className={getIconClass(menu.icon)} style={{ width: '16px', textAlign: 'center', fontSize: '14px', color: isActive ? 'rgba(255,255,255,0.9)' : 'inherit' }}></i>
-            <span>{menu.name}</span>
+            <span className="sidebar-link-text">{menu.name}</span>
           </div>
         </Link>
       )}
 
       {hasSubMenus && isOpen && (
-        <div style={{ paddingLeft: '34px', marginTop: '4px', display: 'flex', flexDirection: 'column', gap: '4px' }}>
+        <div className="sidebar-submenu-wrapper" style={{ paddingLeft: '34px', marginTop: '4px', display: 'flex', flexDirection: 'column', gap: '4px' }}>
           {menu.subMenus.map(subMenu => (
             <div
               key={subMenu.moduleId}
-              onClick={() => navigate(subMenu.url ? (subMenu.url.startsWith('/') ? subMenu.url : `/${subMenu.url}`) : '#')}
+              onClick={() => {
+                navigate(subMenu.url ? (subMenu.url.startsWith('/') ? subMenu.url : `/${subMenu.url}`) : '#');
+                if (onCloseMobile) onCloseMobile();
+              }}
               style={{
                 display: 'block',
                 padding: '8px 12px',
@@ -121,7 +125,7 @@ const MenuItem = ({ menu, activePath }) => {
   );
 };
 
-const Sidebar = ({ menus = [] }) => {
+const Sidebar = ({ menus = [], isMobileOpen, onCloseMobile }) => {
   const location = useLocation();
   const activePath = location.pathname;
 
@@ -262,18 +266,23 @@ const Sidebar = ({ menus = [] }) => {
   }
 
   return (
-    <aside className="layout-sidebar" style={{ overflowY: 'auto', backgroundColor: '#f8f9ff', borderRight: '1px solid var(--color-border-structural)' }}>
-      <div style={{ padding: '32px 24px', display: 'flex', flexDirection: 'column', borderBottom: '1px solid transparent', position: 'sticky', top: 0, backgroundColor: '#f8f9ff', zIndex: 10 }}>
-
-        <Link to="/" style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '8px', textDecoration: 'none' }}>
-          <div style={{ width: '36px', height: '36px', backgroundColor: 'var(--color-primary)', borderRadius: '8px', display: 'flex', justifyContent: 'center', alignItems: 'center', boxShadow: '0 2px 8px rgba(0,63,177,0.3)' }}>
+    <aside className={`layout-sidebar ${isMobileOpen ? 'open' : ''}`}>
+      <div className="sidebar-brand-wrapper">
+        <Link to="/" onClick={onCloseMobile} style={{ display: 'flex', alignItems: 'center', gap: '12px', textDecoration: 'none' }}>
+          <div style={{ width: '36px', height: '36px', backgroundColor: 'var(--color-primary)', borderRadius: '8px', display: 'flex', justifyContent: 'center', alignItems: 'center', boxShadow: '0 2px 8px rgba(0,63,177,0.3)', flexShrink: 0 }}>
             <i className="fa-solid fa-cubes" style={{ color: '#fff', fontSize: '18px' }}></i>
           </div>
-          <div style={{ display: 'flex', flexDirection: 'column' }}>
+          <div className="sidebar-brand-text" style={{ display: 'flex', flexDirection: 'column' }}>
             <span style={{ fontSize: '18px', fontWeight: '700', color: 'var(--color-on-surface)', lineHeight: '1.2' }}>SmartERP</span>
             <span style={{ fontSize: '11px', color: 'var(--color-on-surface-variant)', fontWeight: '500' }}>Enterprise Management</span>
           </div>
         </Link>
+        <button 
+          onClick={onCloseMobile} 
+          className="sidebar-close-btn"
+        >
+          <i className="fa-solid fa-xmark"></i>
+        </button>
       </div>
       <nav style={{ padding: '16px', display: 'flex', flexDirection: 'column' }}>
         {menus.length === 0 ? (
@@ -283,7 +292,7 @@ const Sidebar = ({ menus = [] }) => {
           </div>
         ) : (
           displayedMenus.sort((a, b) => a.displayOrder - b.displayOrder).map(menu => (
-            <MenuItem key={menu.moduleId} menu={menu} activePath={activePath} />
+            <MenuItem key={menu.moduleId} menu={menu} activePath={activePath} onCloseMobile={onCloseMobile} />
           ))
         )}
       </nav>

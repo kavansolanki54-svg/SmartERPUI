@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
-const Header = () => {
+const Header = ({ onToggleSidebar }) => {
   const [user, setUser] = useState({ userName: 'Alex Rivera', roleName: 'Admin' });
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const navigate = useNavigate();
@@ -25,11 +25,17 @@ const Header = () => {
   };
 
   return (
-    <header className="layout-header" style={{ justifyContent: 'space-between', padding: '0 32px', backgroundColor: '#fff' }}>
+    <header className="layout-header">
 
       {/* Left side */}
       <div style={{ display: 'flex', alignItems: 'center' }}>
-        <span style={{ fontSize: '20px', fontWeight: 'bold', color: 'var(--color-primary)', marginRight: '32px' }}>SmartERP</span>
+        <button 
+          onClick={onToggleSidebar}
+          className="sidebar-toggle-btn"
+        >
+          <i className="fa-solid fa-bars"></i>
+        </button>
+        <span className="header-logo-text">SmartERP</span>
       </div>
 
       {/* Right Actions */}
@@ -37,9 +43,9 @@ const Header = () => {
         <div style={{ position: 'relative' }}>
           <div 
             onClick={() => setIsProfileOpen(!isProfileOpen)}
-            style={{ display: 'flex', alignItems: 'center', gap: '12px', borderLeft: '1px solid var(--color-border-structural)', paddingLeft: '24px', cursor: 'pointer' }}
+            className="header-profile-trigger"
           >
-            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
+            <div className="header-user-info" style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
               <span style={{ fontSize: '14px', fontWeight: '600', color: 'var(--color-on-surface)' }}>{user.userName}</span>
               <span style={{ fontSize: '12px', color: 'var(--color-on-surface-variant)' }}>{user.roleName}</span>
             </div>

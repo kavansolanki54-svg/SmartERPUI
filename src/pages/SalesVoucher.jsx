@@ -488,13 +488,7 @@ const SalesVoucher = () => {
       }}>
         
         {/* Tally Top Title Bar */}
-        <div style={{ 
-          display: 'flex', 
-          justifyContent: 'space-between', 
-          alignItems: 'flex-start',
-          padding: '4px 12px',
-          borderBottom: '1px solid #7ea1c4'
-        }}>
+        <div className="voucher-header-row" style={{ alignItems: 'flex-start', padding: '4px 12px' }}>
           {/* Left: Sales Block & Number */}
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
             <span style={{ 
@@ -520,7 +514,8 @@ const SalesVoucher = () => {
                 fontWeight: 'bold', 
                 color: '#000',
                 outline: 'none',
-                width: '300px',
+                width: '100%',
+                maxWidth: '300px',
                 padding: '0'
               }}
             />
@@ -561,7 +556,7 @@ const SalesVoucher = () => {
           <div style={{ display: 'flex', alignItems: 'center' }}>
             <span style={{ width: '120px', fontSize: '14px', color: '#333', fontWeight: 'bold' }}>Party A/c Name</span>
             <span style={{ color: '#333', marginRight: '16px', fontWeight: 'bold' }}>:</span>
-            <div style={{ width: '350px' }}>
+            <div style={{ width: '100%', maxWidth: '350px' }}>
               <Select
                 ref={partySelectRef}
                 value={voucherData.partyLedgerId}
@@ -585,7 +580,8 @@ const SalesVoucher = () => {
         </div>
 
         {/* Tally Main Grid Table */}
-        <div style={{ borderTop: '2px solid #7ea1c4', borderBottom: '2px solid #7ea1c4', backgroundColor: '#eef6fa', display: 'flex', flexDirection: 'column', flex: 1, overflow: 'hidden' }}>
+        <div className="voucher-grid-container">
+          <div className="voucher-grid-table">
           
           {/* Header Row */}
           <div style={{ 
@@ -710,6 +706,7 @@ const SalesVoucher = () => {
               ₹ {calculateTotal().toFixed(2)}
             </div>
             <div style={{ width: '40px' }}></div>
+          </div>
           </div>
         </div>
 
