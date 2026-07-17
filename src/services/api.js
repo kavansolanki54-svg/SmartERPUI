@@ -384,4 +384,16 @@ export const getTallySyncLogs = async (syncType = '', status = '') => {
   return await request(`TallySync/Logs${query}`, 'GET');
 };
 
+// ============ Reports ============
+export const getProfitAndLoss = async (startDate, endDate) => {
+  let query = '';
+  const params = [];
+  if (startDate) params.push(`startDate=${encodeURIComponent(startDate)}`);
+  if (endDate) params.push(`endDate=${encodeURIComponent(endDate)}`);
+  if (params.length > 0) {
+    query = `?${params.join('&')}`;
+  }
+  return await request(`Report/ProfitAndLoss${query}`, 'GET');
+};
+
 

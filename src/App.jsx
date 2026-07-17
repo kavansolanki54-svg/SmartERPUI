@@ -33,6 +33,7 @@ import ContraVoucherList from './pages/ContraVoucherList';
 import ContraVoucher from './pages/ContraVoucher';
 import JournalVoucherList from './pages/JournalVoucherList';
 import JournalVoucher from './pages/JournalVoucher';
+import ProfitAndLossReport from './pages/ProfitAndLossReport';
 
 import Layout from './components/Layout';
 
@@ -98,6 +99,7 @@ function App() {
           <Route path="/Journal" element={<JournalVoucherList />} />
           <Route path="/Journal/create" element={<JournalVoucher />} />
           <Route path="/Journal/edit/:id" element={<JournalVoucher />} />
+          <Route path="/profit-loss" element={<ProfitAndLossReport />} />
         </Route>
 
         <Route path="*" element={<Navigate to="/" replace />} />

@@ -265,6 +265,39 @@ const Sidebar = ({ menus = [], isMobileOpen, onCloseMobile }) => {
     });
   }
 
+  const hasReportsMenu = displayedMenus.some(
+    m => m.name?.toLowerCase().includes('report') || 
+         (m.subMenus && m.subMenus.some(s => s.name?.toLowerCase().includes('report') || s.name?.toLowerCase().includes('profit')))
+  );
+
+  if (!hasReportsMenu && menus.length > 0) {
+    displayedMenus.push({
+      moduleId: 'reports-fallback-temp',
+      name: 'Reports',
+      url: '#',
+      icon: 'chart-line',
+      displayOrder: 93,
+      subMenus: [
+        { moduleId: 'profit-loss-sub', name: 'Profit & Loss A/c', url: '/profit-loss' }
+      ]
+    });
+  } else if (menus.length > 0) {
+    const reportsMenu = displayedMenus.find(
+      m => m.name?.toLowerCase().includes('report') ||
+           (m.subMenus && m.subMenus.some(s => s.name?.toLowerCase().includes('report')))
+    );
+    if (reportsMenu) {
+      if (!reportsMenu.subMenus) reportsMenu.subMenus = [];
+      if (!reportsMenu.subMenus.some(s => s.url === '/profit-loss')) {
+        reportsMenu.subMenus.push({
+          moduleId: 'profit-loss-sub',
+          name: 'Profit & Loss A/c',
+          url: '/profit-loss'
+        });
+      }
+    }
+  }
+
   return (
     <aside className={`layout-sidebar ${isMobileOpen ? 'open' : ''}`}>
       <div className="sidebar-brand-wrapper">
