@@ -1,6 +1,23 @@
 import React from 'react';
 
 const DownloadApk = () => {
+  const [apkSize, setApkSize] = React.useState('21.8 MB');
+
+  React.useEffect(() => {
+    fetch('/app-release.apk', { method: 'HEAD' })
+      .then((res) => {
+        const contentLength = res.headers.get('content-length');
+        if (contentLength) {
+          const sizeBytes = parseInt(contentLength, 10);
+          const sizeMB = (sizeBytes / (1024 * 1024)).toFixed(1);
+          setApkSize(`${sizeMB} MB`);
+        }
+      })
+      .catch((err) => {
+        console.error('Error fetching APK size:', err);
+      });
+  }, []);
+
   const handleDownload = () => {
     // Triggers download of the public asset app-release.apk
     const link = document.createElement('a');
@@ -89,7 +106,7 @@ const DownloadApk = () => {
             onMouseLeave={(e) => e.currentTarget.style.transform = 'none'}
           >
             <i className="fa-solid fa-circle-arrow-down fa-lg"></i>
-            Download Android APK (21.8 MB)
+            Download Android APK ({apkSize})
           </button>
         </div>
 
