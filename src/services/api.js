@@ -385,15 +385,42 @@ export const getTallySyncLogs = async (syncType = '', status = '') => {
 };
 
 // ============ Reports ============
-export const getProfitAndLoss = async (startDate, endDate) => {
+export const getProfitAndLoss = async (startDate, endDate, branchId) => {
   let query = '';
   const params = [];
   if (startDate) params.push(`startDate=${encodeURIComponent(startDate)}`);
   if (endDate) params.push(`endDate=${encodeURIComponent(endDate)}`);
+  if (branchId) params.push(`branchId=${encodeURIComponent(branchId)}`);
   if (params.length > 0) {
     query = `?${params.join('&')}`;
   }
   return await request(`Report/ProfitAndLoss${query}`, 'GET');
+};
+
+export const getGroupDetails = async (groupId, startDate, endDate, branchId) => {
+  let query = `?groupId=${groupId}`;
+  if (startDate) query += `&startDate=${encodeURIComponent(startDate)}`;
+  if (endDate) query += `&endDate=${encodeURIComponent(endDate)}`;
+  if (branchId) query += `&branchId=${encodeURIComponent(branchId)}`;
+  return await request(`Report/ProfitAndLoss/GroupDetails${query}`, 'GET');
+};
+
+export const getLedgerSummary = async (ledgerId, startDate, endDate, branchId) => {
+  let query = `?ledgerId=${ledgerId}`;
+  if (startDate) query += `&startDate=${encodeURIComponent(startDate)}`;
+  if (endDate) query += `&endDate=${encodeURIComponent(endDate)}`;
+  if (branchId) query += `&branchId=${encodeURIComponent(branchId)}`;
+  return await request(`Report/ProfitAndLoss/LedgerSummary${query}`, 'GET');
+};
+
+export const getVoucherRegister = async (ledgerId, startDate, endDate, branchId, voucherType, searchQuery) => {
+  let query = `?ledgerId=${ledgerId}`;
+  if (startDate) query += `&startDate=${encodeURIComponent(startDate)}`;
+  if (endDate) query += `&endDate=${encodeURIComponent(endDate)}`;
+  if (branchId) query += `&branchId=${encodeURIComponent(branchId)}`;
+  if (voucherType) query += `&voucherType=${encodeURIComponent(voucherType)}`;
+  if (searchQuery) query += `&query=${encodeURIComponent(searchQuery)}`;
+  return await request(`Report/ProfitAndLoss/VoucherRegister${query}`, 'GET');
 };
 
 
