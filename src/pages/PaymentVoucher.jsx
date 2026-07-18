@@ -74,8 +74,8 @@ const PaymentVoucher = () => {
       const groupsList = groupsRes.data || [];
       const configsList = configsRes.data || [];
 
-      // Find the Voucher Config for "Payment" (VoucherCategory === 4)
-      const paymentConfig = configsList.find(c => c.voucherCategory === 4);
+      // Find the Voucher Config for "Payment" (VoucherCategory === 50)
+      const paymentConfig = configsList.find(c => c.voucherCategory === 50);
       let configId = null;
       if (paymentConfig) {
         configId = paymentConfig.voucherConfigId;
@@ -575,7 +575,7 @@ const PaymentVoucher = () => {
                 type="date"
                 value={voucherData.voucherDate}
                 onChange={(e) => handleInputChange('voucherDate', e.target.value)}
-                onClick={(e) => { try { e.target.showPicker(); } catch(err) {} }}
+                onClick={(e) => { try { e.target.showPicker(); } catch (err) { } }}
                 style={{
                   position: 'absolute',
                   top: 0,
@@ -646,7 +646,7 @@ const PaymentVoucher = () => {
                   type="date"
                   value={voucherData.referenceDate || ''}
                   onChange={(e) => handleInputChange('referenceDate', e.target.value)}
-                  onClick={(e) => { try { e.target.showPicker(); } catch(err) {} }}
+                  onClick={(e) => { try { e.target.showPicker(); } catch (err) { } }}
                   style={{ border: '1px solid #7ea1c4', padding: '1px 6px', outline: 'none', backgroundColor: '#fff', fontSize: '12px', fontWeight: 'bold' }}
                 />
               </div>
@@ -658,130 +658,130 @@ const PaymentVoucher = () => {
         <div className="voucher-grid-container">
           <div className="voucher-grid-table">
 
-          {/* Header Row */}
-          <div style={{
-            display: 'flex',
-            padding: '4px 16px',
-            borderBottom: '1px solid #7ea1c4',
-            fontWeight: 'bold',
-            fontSize: '13px',
-            color: '#000'
-          }}>
-            <div style={{ flex: 1 }}>Particulars</div>
-            <div style={{ width: '180px', textAlign: 'right' }}>Amount</div>
-            <div style={{ width: '40px' }}></div>
-          </div>
-
-          {/* Rows List */}
-          <div style={{ flex: 1, overflowY: 'auto' }}>
-            {items.map((item, index) => {
-              const isCurrentRowActive = activeRow === index;
-              return (
-                <div key={item.id} style={{
-                  display: 'flex',
-                  alignItems: 'flex-start',
-                  padding: '2px 16px',
-                  backgroundColor: isCurrentRowActive ? '#fef08a' : 'transparent',
-                  transition: 'background-color 0.1s'
-                }}>
-                  {/* Particulars Select Column */}
-                  <div style={{ flex: 1 }}>
-                    <Select
-                      ref={el => selectRefs.current[`particular-${index}`] = el}
-                      value={item.ledgerId}
-                      onChange={(val) => handleItemChange(index, 'ledgerId', val)}
-                      options={particularLedgers}
-                      styles={customSelectStyles}
-                      placeholder="Select Ledger Account"
-                      onFocus={() => setActiveRow(index)}
-                      onBlur={() => setActiveRow(null)}
-                    />
-
-                    {/* Live balance indicator */}
-                    {item.ledgerId && (
-                      <div style={{
-                        fontSize: '12px',
-                        color: '#555',
-                        fontStyle: 'italic',
-                        marginLeft: '4px',
-                        marginTop: '2px',
-                        fontWeight: 'bold'
-                      }}>
-                        Cur Bal: {displayParticularBalance(item)}
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Amount Column */}
-                  <div style={{ width: '180px' }}>
-                    <input
-                      id={`amount-${index}`}
-                      type="number"
-                      step="0.01"
-                      value={item.amount || ''}
-                      onChange={(e) => handleItemChange(index, 'amount', e.target.value)}
-                      onKeyDown={(e) => handleAmountKeyDown(e, index)}
-                      placeholder="0.00"
-                      onFocus={() => setActiveRow(index)}
-                      onBlur={() => setActiveRow(null)}
-                      style={{
-                        width: '100%',
-                        border: 'none',
-                        background: 'transparent',
-                        textAlign: 'right',
-                        fontSize: '14px',
-                        fontWeight: 'bold',
-                        outline: 'none',
-                        height: '28px',
-                        padding: '0 4px',
-                        backgroundColor: isCurrentRowActive ? '#fef08a' : 'transparent',
-                        fontFamily: 'monospace'
-                      }}
-                    />
-                  </div>
-
-                  {/* Action Column */}
-                  <div style={{ width: '40px', textAlign: 'right', height: '28px', display: 'flex', alignItems: 'center', justifyContent: 'flex-end' }}>
-                    {items.length > 1 && (
-                      <button
-                        onClick={() => removeRow(index)}
-                        style={{ border: 'none', backgroundColor: 'transparent', color: '#ef4444', cursor: 'pointer', fontSize: '14px' }}
-                        title="Delete Row"
-                      >
-                        <i className="fa-solid fa-xmark"></i>
-                      </button>
-                    )}
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-
-          {/* Table Bottom Divider */}
-          <div style={{ height: '1px', backgroundColor: '#7ea1c4' }}></div>
-
-          {/* Grid Total Row */}
-          <div style={{
-            display: 'flex',
-            padding: '4px 16px',
-            fontWeight: 'bold',
-            fontSize: '15px',
-            color: '#000',
-            alignItems: 'center'
-          }}>
-            <div style={{ flex: 1, textAlign: 'right', fontSize: '13px', color: '#555' }}>Total :</div>
+            {/* Header Row */}
             <div style={{
-              width: '180px',
-              textAlign: 'right',
-              borderTop: '1px solid #000',
-              borderBottom: '3px double #000',
-              padding: '4px 0',
-              fontFamily: 'monospace'
+              display: 'flex',
+              padding: '4px 16px',
+              borderBottom: '1px solid #7ea1c4',
+              fontWeight: 'bold',
+              fontSize: '13px',
+              color: '#000'
             }}>
-              ₹ {calculateTotal().toFixed(2)}
+              <div style={{ flex: 1 }}>Particulars</div>
+              <div style={{ width: '180px', textAlign: 'right' }}>Amount</div>
+              <div style={{ width: '40px' }}></div>
             </div>
-            <div style={{ width: '40px' }}></div>
-          </div>
+
+            {/* Rows List */}
+            <div style={{ flex: 1, overflowY: 'auto' }}>
+              {items.map((item, index) => {
+                const isCurrentRowActive = activeRow === index;
+                return (
+                  <div key={item.id} style={{
+                    display: 'flex',
+                    alignItems: 'flex-start',
+                    padding: '2px 16px',
+                    backgroundColor: isCurrentRowActive ? '#fef08a' : 'transparent',
+                    transition: 'background-color 0.1s'
+                  }}>
+                    {/* Particulars Select Column */}
+                    <div style={{ flex: 1 }}>
+                      <Select
+                        ref={el => selectRefs.current[`particular-${index}`] = el}
+                        value={item.ledgerId}
+                        onChange={(val) => handleItemChange(index, 'ledgerId', val)}
+                        options={particularLedgers}
+                        styles={customSelectStyles}
+                        placeholder="Select Ledger Account"
+                        onFocus={() => setActiveRow(index)}
+                        onBlur={() => setActiveRow(null)}
+                      />
+
+                      {/* Live balance indicator */}
+                      {item.ledgerId && (
+                        <div style={{
+                          fontSize: '12px',
+                          color: '#555',
+                          fontStyle: 'italic',
+                          marginLeft: '4px',
+                          marginTop: '2px',
+                          fontWeight: 'bold'
+                        }}>
+                          Cur Bal: {displayParticularBalance(item)}
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Amount Column */}
+                    <div style={{ width: '180px' }}>
+                      <input
+                        id={`amount-${index}`}
+                        type="number"
+                        step="0.01"
+                        value={item.amount || ''}
+                        onChange={(e) => handleItemChange(index, 'amount', e.target.value)}
+                        onKeyDown={(e) => handleAmountKeyDown(e, index)}
+                        placeholder="0.00"
+                        onFocus={() => setActiveRow(index)}
+                        onBlur={() => setActiveRow(null)}
+                        style={{
+                          width: '100%',
+                          border: 'none',
+                          background: 'transparent',
+                          textAlign: 'right',
+                          fontSize: '14px',
+                          fontWeight: 'bold',
+                          outline: 'none',
+                          height: '28px',
+                          padding: '0 4px',
+                          backgroundColor: isCurrentRowActive ? '#fef08a' : 'transparent',
+                          fontFamily: 'monospace'
+                        }}
+                      />
+                    </div>
+
+                    {/* Action Column */}
+                    <div style={{ width: '40px', textAlign: 'right', height: '28px', display: 'flex', alignItems: 'center', justifyContent: 'flex-end' }}>
+                      {items.length > 1 && (
+                        <button
+                          onClick={() => removeRow(index)}
+                          style={{ border: 'none', backgroundColor: 'transparent', color: '#ef4444', cursor: 'pointer', fontSize: '14px' }}
+                          title="Delete Row"
+                        >
+                          <i className="fa-solid fa-xmark"></i>
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* Table Bottom Divider */}
+            <div style={{ height: '1px', backgroundColor: '#7ea1c4' }}></div>
+
+            {/* Grid Total Row */}
+            <div style={{
+              display: 'flex',
+              padding: '4px 16px',
+              fontWeight: 'bold',
+              fontSize: '15px',
+              color: '#000',
+              alignItems: 'center'
+            }}>
+              <div style={{ flex: 1, textAlign: 'right', fontSize: '13px', color: '#555' }}>Total :</div>
+              <div style={{
+                width: '180px',
+                textAlign: 'right',
+                borderTop: '1px solid #000',
+                borderBottom: '3px double #000',
+                padding: '4px 0',
+                fontFamily: 'monospace'
+              }}>
+                ₹ {calculateTotal().toFixed(2)}
+              </div>
+              <div style={{ width: '40px' }}></div>
+            </div>
           </div>
         </div>
 

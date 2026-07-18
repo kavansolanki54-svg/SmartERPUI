@@ -72,8 +72,8 @@ const SalesVoucher = () => {
       const groupsList = groupsRes.data || [];
       const configsList = configsRes.data || [];
 
-      // Find the Voucher Config for "Sales" (VoucherCategory === 1)
-      const salesConfig = configsList.find(c => c.voucherCategory === 1);
+      // Find the Voucher Config for "Sales" (VoucherCategory === 47)
+      const salesConfig = configsList.find(c => c.voucherCategory === 47);
       let configId = null;
       if (salesConfig) {
         configId = salesConfig.voucherConfigId;
@@ -123,8 +123,8 @@ const SalesVoucher = () => {
       const partLedgers = [];
 
       ledgersList.forEach(l => {
-        const option = { 
-          value: l.ledgerId, 
+        const option = {
+          value: l.ledgerId,
           label: l.ledgerName,
           balance: l.openingBalance || 0,
           balanceType: l.balanceType || 'Dr'
@@ -150,7 +150,7 @@ const SalesVoucher = () => {
 
           const partyId = vData.partyLedgerId;
           const matchingParty = pLedgers.find(p => p.value === partyId) || null;
-          
+
           setVoucherData({
             voucherNo: vData.voucherNo || '',
             voucherDate: vData.voucherDate ? vData.voucherDate.split('T')[0] : '',
@@ -442,10 +442,10 @@ const SalesVoucher = () => {
     }),
     option: (provided, state) => ({
       ...provided,
-      backgroundColor: state.isSelected 
-        ? '#003366' 
-        : state.isFocused 
-          ? '#e2eff5' 
+      backgroundColor: state.isSelected
+        ? '#003366'
+        : state.isFocused
+          ? '#e2eff5'
           : '#faffff',
       color: state.isSelected ? '#ffffff' : '#000000',
       fontSize: '13px',
@@ -472,30 +472,30 @@ const SalesVoucher = () => {
           -webkit-appearance: none;
         }
       `}</style>
-      
+
       {/* Tally Screen Wrapper */}
-      <div style={{ 
-        maxWidth: '1200px', 
+      <div style={{
+        maxWidth: '1200px',
         width: '100%',
-        margin: '0 auto', 
-        backgroundColor: '#eef6fa', 
-        border: '1px solid #7ea1c4', 
+        margin: '0 auto',
+        backgroundColor: '#eef6fa',
+        border: '1px solid #7ea1c4',
         boxShadow: '0 2px 10px rgba(0,0,0,0.08)',
         display: 'flex',
         flexDirection: 'column',
         flex: 1,
         overflow: 'hidden'
       }}>
-        
+
         {/* Tally Top Title Bar */}
         <div className="voucher-header-row" style={{ alignItems: 'flex-start', padding: '4px 12px' }}>
           {/* Left: Sales Block & Number */}
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <span style={{ 
-              backgroundColor: '#003366', 
-              color: '#ffffff', 
-              padding: '2px 12px', 
-              fontWeight: 'bold', 
+            <span style={{
+              backgroundColor: '#003366',
+              color: '#ffffff',
+              padding: '2px 12px',
+              fontWeight: 'bold',
               fontSize: '13px',
               textTransform: 'uppercase'
             }}>
@@ -507,11 +507,11 @@ const SalesVoucher = () => {
               value={voucherData.voucherNo}
               onChange={(e) => handleInputChange('voucherNo', e.target.value)}
               disabled={isAutoNumbering}
-              style={{ 
-                border: 'none', 
-                background: 'transparent', 
-                fontSize: '14px', 
-                fontWeight: 'bold', 
+              style={{
+                border: 'none',
+                background: 'transparent',
+                fontSize: '14px',
+                fontWeight: 'bold',
                 color: '#000',
                 outline: 'none',
                 width: '100%',
@@ -520,7 +520,7 @@ const SalesVoucher = () => {
               }}
             />
           </div>
-          
+
           {/* Right: Date and Day */}
           <div style={{ textAlign: 'right' }}>
             <div style={{ position: 'relative', display: 'inline-block', cursor: 'pointer' }}>
@@ -536,7 +536,7 @@ const SalesVoucher = () => {
                 type="date"
                 value={voucherData.voucherDate}
                 onChange={(e) => handleInputChange('voucherDate', e.target.value)}
-                onClick={(e) => { try { e.target.showPicker(); } catch(err) {} }}
+                onClick={(e) => { try { e.target.showPicker(); } catch (err) { } }}
                 style={{
                   position: 'absolute',
                   top: 0,
@@ -569,7 +569,7 @@ const SalesVoucher = () => {
               />
             </div>
           </div>
-          
+
           <div style={{ display: 'flex', alignItems: 'center' }}>
             <span style={{ width: '120px', fontSize: '12px', color: '#555', fontStyle: 'italic' }}>Current balance</span>
             <span style={{ color: '#555', marginRight: '16px', fontStyle: 'italic' }}>:</span>
@@ -582,137 +582,137 @@ const SalesVoucher = () => {
         {/* Tally Main Grid Table */}
         <div className="voucher-grid-container">
           <div className="voucher-grid-table">
-          
-          {/* Header Row */}
-          <div style={{ 
-            display: 'flex', 
-            padding: '4px 16px', 
-            borderBottom: '1px solid #7ea1c4',
-            fontWeight: 'bold',
-            fontSize: '13px',
-            color: '#000'
-          }}>
-            <div style={{ flex: 1 }}>Particulars</div>
-            <div style={{ width: '180px', textAlign: 'right' }}>Amount</div>
-            <div style={{ width: '40px' }}></div>
-          </div>
 
-          {/* Rows List */}
-          <div style={{ flex: 1, overflowY: 'auto' }}>
-            {items.map((item, index) => {
-              const isCurrentRowActive = activeRow === index;
-              return (
-                <div key={item.id} style={{ 
-                  display: 'flex', 
-                  alignItems: 'flex-start', 
-                  padding: '2px 16px',
-                  backgroundColor: isCurrentRowActive ? '#fef08a' : 'transparent',
-                  transition: 'background-color 0.1s'
-                }}>
-                  {/* Particulars Select Column */}
-                  <div style={{ flex: 1 }}>
-                    <Select
-                      ref={el => selectRefs.current[`particular-${index}`] = el}
-                      value={item.ledgerId}
-                      onChange={(val) => handleItemChange(index, 'ledgerId', val)}
-                      options={particularLedgers}
-                      styles={customSelectStyles}
-                      placeholder="Select Ledger Account"
-                      onFocus={() => setActiveRow(index)}
-                      onBlur={() => setActiveRow(null)}
-                    />
-                    
-                    {/* Live balance indicator below particular dropdown */}
-                    {item.ledgerId && (
-                      <div style={{ 
-                        fontSize: '12px', 
-                        color: '#555', 
-                        fontStyle: 'italic', 
-                        marginLeft: '4px',
-                        marginTop: '2px',
-                        fontWeight: 'bold'
-                      }}>
-                        Cur Bal: {displayParticularBalance(item)}
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Amount Column */}
-                  <div style={{ width: '180px' }}>
-                    <input
-                      id={`amount-${index}`}
-                      type="number"
-                      step="0.01"
-                      value={item.amount || ''}
-                      onChange={(e) => handleItemChange(index, 'amount', e.target.value)}
-                      onKeyDown={(e) => handleAmountKeyDown(e, index)}
-                      placeholder="0.00"
-                      onFocus={() => setActiveRow(index)}
-                      onBlur={() => setActiveRow(null)}
-                      style={{ 
-                        width: '100%', 
-                        border: 'none', 
-                        background: 'transparent', 
-                        textAlign: 'right', 
-                        fontSize: '14px', 
-                        fontWeight: 'bold', 
-                        outline: 'none',
-                        height: '28px',
-                        padding: '0 4px',
-                        backgroundColor: isCurrentRowActive ? '#fef08a' : 'transparent',
-                        fontFamily: 'monospace'
-                      }}
-                    />
-                  </div>
-
-                  {/* Action Column */}
-                  <div style={{ width: '40px', textAlign: 'right', height: '28px', display: 'flex', alignItems: 'center', justifyContent: 'flex-end' }}>
-                    {items.length > 1 && (
-                      <button
-                        onClick={() => removeRow(index)}
-                        style={{ border: 'none', backgroundColor: 'transparent', color: '#ef4444', cursor: 'pointer', fontSize: '14px' }}
-                        title="Delete Row"
-                      >
-                        <i className="fa-solid fa-xmark"></i>
-                      </button>
-                    )}
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-
-          {/* Table Bottom Divider */}
-          <div style={{ height: '1px', backgroundColor: '#7ea1c4' }}></div>
-
-          {/* Grid Total Row */}
-          <div style={{ 
-            display: 'flex', 
-            padding: '4px 16px', 
-            fontWeight: 'bold',
-            fontSize: '15px',
-            color: '#000',
-            alignItems: 'center'
-          }}>
-            <div style={{ flex: 1, textAlign: 'right', fontSize: '13px', color: '#555' }}>Total :</div>
-            <div style={{ 
-              width: '180px', 
-              textAlign: 'right',
-              borderTop: '1px solid #000',
-              borderBottom: '3px double #000',
-              padding: '4px 0',
-              fontFamily: 'monospace'
+            {/* Header Row */}
+            <div style={{
+              display: 'flex',
+              padding: '4px 16px',
+              borderBottom: '1px solid #7ea1c4',
+              fontWeight: 'bold',
+              fontSize: '13px',
+              color: '#000'
             }}>
-              ₹ {calculateTotal().toFixed(2)}
+              <div style={{ flex: 1 }}>Particulars</div>
+              <div style={{ width: '180px', textAlign: 'right' }}>Amount</div>
+              <div style={{ width: '40px' }}></div>
             </div>
-            <div style={{ width: '40px' }}></div>
-          </div>
+
+            {/* Rows List */}
+            <div style={{ flex: 1, overflowY: 'auto' }}>
+              {items.map((item, index) => {
+                const isCurrentRowActive = activeRow === index;
+                return (
+                  <div key={item.id} style={{
+                    display: 'flex',
+                    alignItems: 'flex-start',
+                    padding: '2px 16px',
+                    backgroundColor: isCurrentRowActive ? '#fef08a' : 'transparent',
+                    transition: 'background-color 0.1s'
+                  }}>
+                    {/* Particulars Select Column */}
+                    <div style={{ flex: 1 }}>
+                      <Select
+                        ref={el => selectRefs.current[`particular-${index}`] = el}
+                        value={item.ledgerId}
+                        onChange={(val) => handleItemChange(index, 'ledgerId', val)}
+                        options={particularLedgers}
+                        styles={customSelectStyles}
+                        placeholder="Select Ledger Account"
+                        onFocus={() => setActiveRow(index)}
+                        onBlur={() => setActiveRow(null)}
+                      />
+
+                      {/* Live balance indicator below particular dropdown */}
+                      {item.ledgerId && (
+                        <div style={{
+                          fontSize: '12px',
+                          color: '#555',
+                          fontStyle: 'italic',
+                          marginLeft: '4px',
+                          marginTop: '2px',
+                          fontWeight: 'bold'
+                        }}>
+                          Cur Bal: {displayParticularBalance(item)}
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Amount Column */}
+                    <div style={{ width: '180px' }}>
+                      <input
+                        id={`amount-${index}`}
+                        type="number"
+                        step="0.01"
+                        value={item.amount || ''}
+                        onChange={(e) => handleItemChange(index, 'amount', e.target.value)}
+                        onKeyDown={(e) => handleAmountKeyDown(e, index)}
+                        placeholder="0.00"
+                        onFocus={() => setActiveRow(index)}
+                        onBlur={() => setActiveRow(null)}
+                        style={{
+                          width: '100%',
+                          border: 'none',
+                          background: 'transparent',
+                          textAlign: 'right',
+                          fontSize: '14px',
+                          fontWeight: 'bold',
+                          outline: 'none',
+                          height: '28px',
+                          padding: '0 4px',
+                          backgroundColor: isCurrentRowActive ? '#fef08a' : 'transparent',
+                          fontFamily: 'monospace'
+                        }}
+                      />
+                    </div>
+
+                    {/* Action Column */}
+                    <div style={{ width: '40px', textAlign: 'right', height: '28px', display: 'flex', alignItems: 'center', justifyContent: 'flex-end' }}>
+                      {items.length > 1 && (
+                        <button
+                          onClick={() => removeRow(index)}
+                          style={{ border: 'none', backgroundColor: 'transparent', color: '#ef4444', cursor: 'pointer', fontSize: '14px' }}
+                          title="Delete Row"
+                        >
+                          <i className="fa-solid fa-xmark"></i>
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* Table Bottom Divider */}
+            <div style={{ height: '1px', backgroundColor: '#7ea1c4' }}></div>
+
+            {/* Grid Total Row */}
+            <div style={{
+              display: 'flex',
+              padding: '4px 16px',
+              fontWeight: 'bold',
+              fontSize: '15px',
+              color: '#000',
+              alignItems: 'center'
+            }}>
+              <div style={{ flex: 1, textAlign: 'right', fontSize: '13px', color: '#555' }}>Total :</div>
+              <div style={{
+                width: '180px',
+                textAlign: 'right',
+                borderTop: '1px solid #000',
+                borderBottom: '3px double #000',
+                padding: '4px 0',
+                fontFamily: 'monospace'
+              }}>
+                ₹ {calculateTotal().toFixed(2)}
+              </div>
+              <div style={{ width: '40px' }}></div>
+            </div>
           </div>
         </div>
 
         {/* Tally Bottom Narration and Action Block */}
-        <div style={{ 
-          padding: '8px 16px', 
+        <div style={{
+          padding: '8px 16px',
           backgroundColor: '#eef6fa',
           display: 'flex',
           justifyContent: 'space-between',
@@ -729,12 +729,12 @@ const SalesVoucher = () => {
               placeholder="Enter narration remarks"
               onFocus={() => setActiveRow('narration')}
               onBlur={() => setActiveRow(null)}
-              style={{ 
-                width: '100%', 
-                height: '48px', 
-                border: 'none', 
-                outline: 'none', 
-                padding: '6px', 
+              style={{
+                width: '100%',
+                height: '48px',
+                border: 'none',
+                outline: 'none',
+                padding: '6px',
                 fontSize: '13px',
                 resize: 'none',
                 fontWeight: 'bold',
@@ -748,30 +748,30 @@ const SalesVoucher = () => {
           <div style={{ display: 'flex', gap: '12px' }}>
             <button
               onClick={() => navigate('/Sales')}
-              style={{ 
-                padding: '8px 20px', 
-                backgroundColor: '#fff', 
-                color: '#475569', 
-                border: '1px solid #7ea1c4', 
-                cursor: 'pointer', 
-                fontSize: '13px', 
+              style={{
+                padding: '8px 20px',
+                backgroundColor: '#fff',
+                color: '#475569',
+                border: '1px solid #7ea1c4',
+                cursor: 'pointer',
+                fontSize: '13px',
                 fontWeight: 'bold',
                 borderRadius: '2px'
               }}
             >
               Esc: Cancel
             </button>
-            
+
             <button
               onClick={() => submitVoucher(1)}
               disabled={isSaving}
-              style={{ 
-                padding: '8px 20px', 
-                backgroundColor: '#fff', 
-                color: 'var(--color-primary)', 
-                border: '1px solid var(--color-primary)', 
-                cursor: 'pointer', 
-                fontSize: '13px', 
+              style={{
+                padding: '8px 20px',
+                backgroundColor: '#fff',
+                color: 'var(--color-primary)',
+                border: '1px solid var(--color-primary)',
+                cursor: 'pointer',
+                fontSize: '13px',
                 fontWeight: 'bold',
                 borderRadius: '2px',
                 opacity: isSaving ? 0.5 : 1
@@ -783,13 +783,13 @@ const SalesVoucher = () => {
             <button
               onClick={() => submitVoucher(2)}
               disabled={isSaving}
-              style={{ 
-                padding: '8px 20px', 
-                backgroundColor: 'var(--color-primary)', 
-                color: '#fff', 
-                border: 'none', 
-                cursor: 'pointer', 
-                fontSize: '13px', 
+              style={{
+                padding: '8px 20px',
+                backgroundColor: 'var(--color-primary)',
+                color: '#fff',
+                border: 'none',
+                cursor: 'pointer',
+                fontSize: '13px',
                 fontWeight: 'bold',
                 borderRadius: '2px',
                 opacity: isSaving ? 0.5 : 1

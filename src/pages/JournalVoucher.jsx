@@ -62,8 +62,8 @@ const JournalVoucher = () => {
       const ledgersList = ledgersRes.data || [];
       const configsList = configsRes.data || [];
 
-      // Find the Voucher Config for "Journal" (VoucherCategory === 5)
-      const journalConfig = configsList.find(c => c.voucherCategory === 5);
+      // Find the Voucher Config for "Journal" (VoucherCategory === 52)
+      const journalConfig = configsList.find(c => c.voucherCategory === 52);
       let configId = null;
       if (journalConfig) {
         configId = journalConfig.voucherConfigId;
@@ -480,7 +480,7 @@ const JournalVoucher = () => {
                 type="date"
                 value={voucherData.voucherDate}
                 onChange={(e) => handleInputChange('voucherDate', e.target.value)}
-                onClick={(e) => { try { e.target.showPicker(); } catch(err) {} }}
+                onClick={(e) => { try { e.target.showPicker(); } catch (err) { } }}
                 style={{
                   position: 'absolute',
                   top: 0,
@@ -507,194 +507,194 @@ const JournalVoucher = () => {
         <div className="voucher-grid-container">
           <div className="voucher-grid-table">
 
-          {/* Header Row */}
-          <div style={{
-            display: 'grid',
-            gridTemplateColumns: '1fr 160px 160px 40px',
-            padding: '4px 16px',
-            borderBottom: '1px solid #7ea1c4',
-            fontWeight: 'bold',
-            fontSize: '13px',
-            color: '#000'
-          }}>
-            <div>Particulars (Ledger Account)</div>
-            <div style={{ textAlign: 'right', color: '#166534' }}>Debit (Dr)</div>
-            <div style={{ textAlign: 'right', color: '#991b1b' }}>Credit (Cr)</div>
-            <div></div>
-          </div>
-
-          {/* Rows List */}
-          <div style={{ flex: 1, overflowY: 'auto' }}>
-            {items.map((item, index) => {
-              const isCurrentRowActive = activeRow === index;
-              return (
-                <div key={item.id} style={{
-                  display: 'grid',
-                  gridTemplateColumns: '1fr 160px 160px 40px',
-                  alignItems: 'flex-start',
-                  padding: '2px 16px',
-                  backgroundColor: isCurrentRowActive ? '#fef9c3' : index % 2 === 0 ? 'transparent' : '#f8fafc',
-                  transition: 'background-color 0.1s',
-                  borderBottom: '1px dashed #c8dce9'
-                }}>
-                  {/* Ledger Select Column */}
-                  <div>
-                    <Select
-                      ref={el => selectRefs.current[`ledger-${index}`] = el}
-                      value={item.ledgerId}
-                      onChange={(val) => handleItemChange(index, 'ledgerId', val)}
-                      options={allLedgers}
-                      styles={customSelectStyles}
-                      placeholder="Select Ledger Account"
-                      onFocus={() => setActiveRow(index)}
-                      onBlur={() => setActiveRow(null)}
-                    />
-                    {item.ledgerId && (
-                      <div style={{ fontSize: '11px', color: '#555', fontStyle: 'italic', marginLeft: '4px', marginTop: '1px', fontWeight: 'bold' }}>
-                        Bal: {displayCurrentBalance(item)}
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Dr Amount Column */}
-                  <div>
-                    <input
-                      id={`dr-${index}`}
-                      type="number"
-                      step="0.01"
-                      value={item.drAmount || ''}
-                      onChange={(e) => handleItemChange(index, 'drAmount', e.target.value)}
-                      onKeyDown={(e) => handleDrKeyDown(e, index)}
-                      placeholder="0.00"
-                      onFocus={() => setActiveRow(index)}
-                      onBlur={() => setActiveRow(null)}
-                      style={{
-                        width: '100%',
-                        border: 'none',
-                        background: 'transparent',
-                        textAlign: 'right',
-                        fontSize: '14px',
-                        fontWeight: 'bold',
-                        outline: 'none',
-                        height: '28px',
-                        padding: '0 4px',
-                        backgroundColor: isCurrentRowActive ? '#fef08a' : 'transparent',
-                        fontFamily: 'monospace',
-                        color: '#166534'
-                      }}
-                    />
-                  </div>
-
-                  {/* Cr Amount Column */}
-                  <div>
-                    <input
-                      id={`cr-${index}`}
-                      type="number"
-                      step="0.01"
-                      value={item.crAmount || ''}
-                      onChange={(e) => handleItemChange(index, 'crAmount', e.target.value)}
-                      onKeyDown={(e) => handleCrKeyDown(e, index)}
-                      placeholder="0.00"
-                      onFocus={() => setActiveRow(index)}
-                      onBlur={() => setActiveRow(null)}
-                      style={{
-                        width: '100%',
-                        border: 'none',
-                        background: 'transparent',
-                        textAlign: 'right',
-                        fontSize: '14px',
-                        fontWeight: 'bold',
-                        outline: 'none',
-                        height: '28px',
-                        padding: '0 4px',
-                        backgroundColor: isCurrentRowActive ? '#fef08a' : 'transparent',
-                        fontFamily: 'monospace',
-                        color: '#991b1b'
-                      }}
-                    />
-                  </div>
-
-                  {/* Action Column */}
-                  <div style={{ height: '28px', display: 'flex', alignItems: 'center', justifyContent: 'flex-end' }}>
-                    {items.length > 2 && (
-                      <button
-                        onClick={() => removeRow(index)}
-                        style={{ border: 'none', backgroundColor: 'transparent', color: '#ef4444', cursor: 'pointer', fontSize: '14px' }}
-                        title="Delete Row"
-                      >
-                        <i className="fa-solid fa-xmark"></i>
-                      </button>
-                    )}
-                  </div>
-                </div>
-              );
-            })}
-
-            {/* Add Row Button */}
-            <div style={{ padding: '4px 16px' }}>
-              <button
-                onClick={addNewRow}
-                style={{
-                  border: 'none',
-                  backgroundColor: 'transparent',
-                  color: '#1a5276',
-                  cursor: 'pointer',
-                  fontSize: '12px',
-                  fontWeight: 'bold',
-                  padding: '2px 0',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '4px'
-                }}
-              >
-                <i className="fa-solid fa-plus"></i> Add Row
-              </button>
-            </div>
-          </div>
-
-          {/* Table Bottom Divider */}
-          <div style={{ height: '1px', backgroundColor: '#7ea1c4' }}></div>
-
-          {/* Grid Total Row */}
-          <div style={{
-            display: 'grid',
-            gridTemplateColumns: '1fr 160px 160px 40px',
-            padding: '4px 16px',
-            fontWeight: 'bold',
-            fontSize: '14px',
-            color: '#000',
-            alignItems: 'center'
-          }}>
-            <div style={{ fontSize: '13px', color: '#555', textAlign: 'right' }}>Total :</div>
+            {/* Header Row */}
             <div style={{
-              textAlign: 'right',
-              borderTop: '1px solid #000',
-              borderBottom: '3px double #000',
-              padding: '4px 0',
-              fontFamily: 'monospace',
-              color: '#166534'
+              display: 'grid',
+              gridTemplateColumns: '1fr 160px 160px 40px',
+              padding: '4px 16px',
+              borderBottom: '1px solid #7ea1c4',
+              fontWeight: 'bold',
+              fontSize: '13px',
+              color: '#000'
             }}>
-              ₹ {totalDr.toFixed(2)}
+              <div>Particulars (Ledger Account)</div>
+              <div style={{ textAlign: 'right', color: '#166534' }}>Debit (Dr)</div>
+              <div style={{ textAlign: 'right', color: '#991b1b' }}>Credit (Cr)</div>
+              <div></div>
             </div>
-            <div style={{
-              textAlign: 'right',
-              borderTop: '1px solid #000',
-              borderBottom: `3px double ${isBalanced ? '#000' : '#ef4444'}`,
-              padding: '4px 0',
-              fontFamily: 'monospace',
-              color: '#991b1b'
-            }}>
-              ₹ {totalCr.toFixed(2)}
-            </div>
-            <div></div>
-          </div>
 
-          {/* Difference indicator */}
-          {!isBalanced && (
-            <div style={{ padding: '2px 16px', textAlign: 'right', fontSize: '12px', color: '#ef4444', fontWeight: 'bold', paddingRight: '56px' }}>
-              Difference: ₹ {difference.toFixed(2)}
+            {/* Rows List */}
+            <div style={{ flex: 1, overflowY: 'auto' }}>
+              {items.map((item, index) => {
+                const isCurrentRowActive = activeRow === index;
+                return (
+                  <div key={item.id} style={{
+                    display: 'grid',
+                    gridTemplateColumns: '1fr 160px 160px 40px',
+                    alignItems: 'flex-start',
+                    padding: '2px 16px',
+                    backgroundColor: isCurrentRowActive ? '#fef9c3' : index % 2 === 0 ? 'transparent' : '#f8fafc',
+                    transition: 'background-color 0.1s',
+                    borderBottom: '1px dashed #c8dce9'
+                  }}>
+                    {/* Ledger Select Column */}
+                    <div>
+                      <Select
+                        ref={el => selectRefs.current[`ledger-${index}`] = el}
+                        value={item.ledgerId}
+                        onChange={(val) => handleItemChange(index, 'ledgerId', val)}
+                        options={allLedgers}
+                        styles={customSelectStyles}
+                        placeholder="Select Ledger Account"
+                        onFocus={() => setActiveRow(index)}
+                        onBlur={() => setActiveRow(null)}
+                      />
+                      {item.ledgerId && (
+                        <div style={{ fontSize: '11px', color: '#555', fontStyle: 'italic', marginLeft: '4px', marginTop: '1px', fontWeight: 'bold' }}>
+                          Bal: {displayCurrentBalance(item)}
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Dr Amount Column */}
+                    <div>
+                      <input
+                        id={`dr-${index}`}
+                        type="number"
+                        step="0.01"
+                        value={item.drAmount || ''}
+                        onChange={(e) => handleItemChange(index, 'drAmount', e.target.value)}
+                        onKeyDown={(e) => handleDrKeyDown(e, index)}
+                        placeholder="0.00"
+                        onFocus={() => setActiveRow(index)}
+                        onBlur={() => setActiveRow(null)}
+                        style={{
+                          width: '100%',
+                          border: 'none',
+                          background: 'transparent',
+                          textAlign: 'right',
+                          fontSize: '14px',
+                          fontWeight: 'bold',
+                          outline: 'none',
+                          height: '28px',
+                          padding: '0 4px',
+                          backgroundColor: isCurrentRowActive ? '#fef08a' : 'transparent',
+                          fontFamily: 'monospace',
+                          color: '#166534'
+                        }}
+                      />
+                    </div>
+
+                    {/* Cr Amount Column */}
+                    <div>
+                      <input
+                        id={`cr-${index}`}
+                        type="number"
+                        step="0.01"
+                        value={item.crAmount || ''}
+                        onChange={(e) => handleItemChange(index, 'crAmount', e.target.value)}
+                        onKeyDown={(e) => handleCrKeyDown(e, index)}
+                        placeholder="0.00"
+                        onFocus={() => setActiveRow(index)}
+                        onBlur={() => setActiveRow(null)}
+                        style={{
+                          width: '100%',
+                          border: 'none',
+                          background: 'transparent',
+                          textAlign: 'right',
+                          fontSize: '14px',
+                          fontWeight: 'bold',
+                          outline: 'none',
+                          height: '28px',
+                          padding: '0 4px',
+                          backgroundColor: isCurrentRowActive ? '#fef08a' : 'transparent',
+                          fontFamily: 'monospace',
+                          color: '#991b1b'
+                        }}
+                      />
+                    </div>
+
+                    {/* Action Column */}
+                    <div style={{ height: '28px', display: 'flex', alignItems: 'center', justifyContent: 'flex-end' }}>
+                      {items.length > 2 && (
+                        <button
+                          onClick={() => removeRow(index)}
+                          style={{ border: 'none', backgroundColor: 'transparent', color: '#ef4444', cursor: 'pointer', fontSize: '14px' }}
+                          title="Delete Row"
+                        >
+                          <i className="fa-solid fa-xmark"></i>
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+
+              {/* Add Row Button */}
+              <div style={{ padding: '4px 16px' }}>
+                <button
+                  onClick={addNewRow}
+                  style={{
+                    border: 'none',
+                    backgroundColor: 'transparent',
+                    color: '#1a5276',
+                    cursor: 'pointer',
+                    fontSize: '12px',
+                    fontWeight: 'bold',
+                    padding: '2px 0',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '4px'
+                  }}
+                >
+                  <i className="fa-solid fa-plus"></i> Add Row
+                </button>
+              </div>
             </div>
-          )}
+
+            {/* Table Bottom Divider */}
+            <div style={{ height: '1px', backgroundColor: '#7ea1c4' }}></div>
+
+            {/* Grid Total Row */}
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: '1fr 160px 160px 40px',
+              padding: '4px 16px',
+              fontWeight: 'bold',
+              fontSize: '14px',
+              color: '#000',
+              alignItems: 'center'
+            }}>
+              <div style={{ fontSize: '13px', color: '#555', textAlign: 'right' }}>Total :</div>
+              <div style={{
+                textAlign: 'right',
+                borderTop: '1px solid #000',
+                borderBottom: '3px double #000',
+                padding: '4px 0',
+                fontFamily: 'monospace',
+                color: '#166534'
+              }}>
+                ₹ {totalDr.toFixed(2)}
+              </div>
+              <div style={{
+                textAlign: 'right',
+                borderTop: '1px solid #000',
+                borderBottom: `3px double ${isBalanced ? '#000' : '#ef4444'}`,
+                padding: '4px 0',
+                fontFamily: 'monospace',
+                color: '#991b1b'
+              }}>
+                ₹ {totalCr.toFixed(2)}
+              </div>
+              <div></div>
+            </div>
+
+            {/* Difference indicator */}
+            {!isBalanced && (
+              <div style={{ padding: '2px 16px', textAlign: 'right', fontSize: '12px', color: '#ef4444', fontWeight: 'bold', paddingRight: '56px' }}>
+                Difference: ₹ {difference.toFixed(2)}
+              </div>
+            )}
           </div>
         </div>
 
