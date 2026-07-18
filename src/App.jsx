@@ -21,6 +21,7 @@ import VoucherConfigurationSettings from './pages/VoucherConfigurationSettings';
 import TallyConfigurationSettings from './pages/TallyConfigurationSettings';
 import TallySyncDashboard from './pages/TallySyncDashboard';
 import MobileAppMenu from './pages/MobileAppMenu';
+import DownloadApk from './pages/DownloadApk';
 import SalesVoucherList from './pages/SalesVoucherList';
 import SalesVoucher from './pages/SalesVoucher';
 import PurchaseVoucherList from './pages/PurchaseVoucherList';
@@ -78,6 +79,7 @@ function App() {
           <Route path="/ledger/edit/:id" element={<LedgerForm />} />
           <Route path="/rolesoftwaremodules" element={<AccessControl />} />
           <Route path="/mobileappmenu" element={<MobileAppMenu />} />
+          <Route path="/download-apk" element={<DownloadApk />} />
           <Route path="/voucherconfig" element={<VoucherConfigurationSettings />} />
           <Route path="/tallyconfig" element={<TallyConfigurationSettings />} />
           <Route path="/tallysync" element={<TallySyncDashboard />} />

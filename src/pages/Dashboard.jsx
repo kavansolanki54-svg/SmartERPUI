@@ -278,7 +278,7 @@ const Dashboard = () => {
 
             </div>
 
-            <div style={{ padding: '24px', marginTop: 'auto' }}>
+            <div style={{ padding: '20px 24px 24px', display: 'flex', flexDirection: 'column', gap: '16px', marginTop: 'auto' }}>
               <div style={{ backgroundColor: 'var(--color-primary)', borderRadius: '8px', padding: '20px', color: '#fff' }}>
                 <div style={{ fontSize: '14px', fontWeight: '700', marginBottom: '8px' }}>Optimize Tally Integration</div>
                 <div style={{ fontSize: '13px', lineHeight: '1.4', marginBottom: '16px', color: 'rgba(255,255,255,0.8)' }}>
@@ -289,6 +289,22 @@ const Dashboard = () => {
                   style={{ display: 'block', width: '100%', padding: '8px', backgroundColor: '#fff', color: 'var(--color-primary)', border: 'none', borderRadius: '6px', fontSize: '13px', fontWeight: '600', cursor: 'pointer', textAlign: 'center', textDecoration: 'none' }}
                 >
                   Go to Sync Panel
+                </Link>
+              </div>
+
+              <div style={{ backgroundColor: 'var(--color-surface-container-low)', border: '1px solid var(--color-border-structural)', borderRadius: '8px', padding: '20px', color: 'var(--color-on-surface)' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '8px' }}>
+                  <i className="fa-solid fa-mobile-screen-button" style={{ color: 'var(--color-primary)' }}></i>
+                  <div style={{ fontSize: '14px', fontWeight: '700' }}>SmartERP Mobile App</div>
+                </div>
+                <div style={{ fontSize: '12px', lineHeight: '1.4', marginBottom: '16px', color: 'var(--color-on-surface-variant)' }}>
+                  Create vouchers and monitor your operations on the go with our Android App.
+                </div>
+                <Link 
+                  to="/download-apk"
+                  style={{ display: 'block', width: '100%', padding: '8px', backgroundColor: 'var(--color-primary)', color: '#fff', border: 'none', borderRadius: '6px', fontSize: '13px', fontWeight: '600', cursor: 'pointer', textAlign: 'center', textDecoration: 'none' }}
+                >
+                  Download Android APK
                 </Link>
               </div>
             </div>

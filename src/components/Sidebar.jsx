@@ -298,6 +298,17 @@ const Sidebar = ({ menus = [], isMobileOpen, onCloseMobile }) => {
     }
   }
 
+  if (menus.length > 0) {
+    displayedMenus.push({
+      moduleId: 'download-apk-fallback-temp',
+      name: 'Download Mobile App',
+      url: '/download-apk',
+      icon: 'mobile-screen-button',
+      displayOrder: 101,
+      subMenus: []
+    });
+  }
+
   return (
     <aside className={`layout-sidebar ${isMobileOpen ? 'open' : ''}`}>
       <div className="sidebar-brand-wrapper">
