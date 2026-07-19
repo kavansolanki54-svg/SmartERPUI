@@ -423,4 +423,24 @@ export const getVoucherRegister = async (ledgerId, startDate, endDate, branchId,
   return await request(`Report/ProfitAndLoss/VoucherRegister${query}`, 'GET');
 };
 
+export const getCashBankSummary = async (startDate, endDate, branchId) => {
+  let query = '';
+  const params = [];
+  if (startDate) params.push(`startDate=${encodeURIComponent(startDate)}`);
+  if (endDate) params.push(`endDate=${encodeURIComponent(endDate)}`);
+  if (branchId) params.push(`branchId=${encodeURIComponent(branchId)}`);
+  if (params.length > 0) {
+    query = `?${params.join('&')}`;
+  }
+  return await request(`Report/CashBankSummary${query}`, 'GET');
+};
+
+export const getLedgerMonthlySummary = async (ledgerId, startDate, endDate, branchId) => {
+  let query = `?ledgerId=${ledgerId}`;
+  if (startDate) query += `&startDate=${encodeURIComponent(startDate)}`;
+  if (endDate) query += `&endDate=${encodeURIComponent(endDate)}`;
+  if (branchId) query += `&branchId=${encodeURIComponent(branchId)}`;
+  return await request(`Report/LedgerMonthlySummary${query}`, 'GET');
+};
+
 

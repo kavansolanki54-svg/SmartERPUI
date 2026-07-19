@@ -278,7 +278,8 @@ const Sidebar = ({ menus = [], isMobileOpen, onCloseMobile }) => {
       icon: 'chart-line',
       displayOrder: 93,
       subMenus: [
-        { moduleId: 'profit-loss-sub', name: 'Profit & Loss A/c', url: '/profit-loss' }
+        { moduleId: 'profit-loss-sub', name: 'Profit & Loss A/c', url: '/profit-loss' },
+        { moduleId: 'cash-bank-sub', name: 'Cash / Bank Summary', url: '/cash-bank-summary' }
       ]
     });
   } else if (menus.length > 0) {
@@ -293,6 +294,13 @@ const Sidebar = ({ menus = [], isMobileOpen, onCloseMobile }) => {
           moduleId: 'profit-loss-sub',
           name: 'Profit & Loss A/c',
           url: '/profit-loss'
+        });
+      }
+      if (!reportsMenu.subMenus.some(s => s.url === '/cash-bank-summary')) {
+        reportsMenu.subMenus.push({
+          moduleId: 'cash-bank-sub',
+          name: 'Cash / Bank Summary',
+          url: '/cash-bank-summary'
         });
       }
     }

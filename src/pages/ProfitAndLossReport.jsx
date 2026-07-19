@@ -231,7 +231,7 @@ const ProfitAndLossReport = () => {
   return (
     <div style={{ padding: '24px', backgroundColor: 'var(--color-background)', minHeight: '100vh', fontFamily: 'var(--font-family-base)' }}>
 
-      {/* Print Specific CSS Styles */}
+      {/* Print Specific & Mobile Responsive CSS Styles */}
       <style dangerouslySetInnerHTML={{
         __html: `
         @media print {
@@ -250,10 +250,48 @@ const ProfitAndLossReport = () => {
             box-shadow: none !important;
           }
         }
+        @media (max-width: 768px) {
+          .responsive-header {
+            flex-direction: column !important;
+            align-items: stretch !important;
+            gap: 16px !important;
+            padding: 12px 16px !important;
+          }
+          .responsive-actions {
+            flex-direction: column !important;
+            align-items: stretch !important;
+            width: 100% !important;
+          }
+          .responsive-actions > button, .responsive-actions > div {
+            width: 100% !important;
+            box-sizing: border-box !important;
+          }
+          .responsive-table-container {
+            overflow-x: auto !important;
+            -webkit-overflow-scrolling: touch;
+          }
+          .responsive-table-container table, .responsive-table-container > div {
+            min-width: 700px !important;
+          }
+          .responsive-date-container {
+            flex-direction: column !important;
+            align-items: stretch !important;
+            width: 100% !important;
+            gap: 4px !important;
+          }
+          .responsive-date-container > input {
+            width: 100% !important;
+            box-sizing: border-box !important;
+          }
+          .responsive-date-container > span {
+            text-align: center !important;
+            margin: 4px 0 !important;
+          }
+        }
       `}} />
 
       {/* Combined Title, Date Filter & Actions Card */}
-      <div style={{
+      <div className="responsive-header" style={{
         backgroundColor: 'var(--color-level-1)',
         borderRadius: 'var(--radius-lg)',
         padding: '16px 24px',
@@ -272,7 +310,7 @@ const ProfitAndLossReport = () => {
         </div>
 
         {/* Middle: Date Range Selectors */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+        <div className="responsive-date-container" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
           <input
             type="date"
             value={startDate}
@@ -289,7 +327,7 @@ const ProfitAndLossReport = () => {
         </div>
 
         {/* Right: Search, Export & Print Actions */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+        <div className="responsive-actions" style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
           <div style={{ position: 'relative', width: '220px' }}>
             <i className="fa-solid fa-magnifying-glass" style={{ position: 'absolute', left: '10px', top: '9px', color: 'var(--color-outline)', fontSize: '12px' }}></i>
             <input
@@ -375,7 +413,7 @@ const ProfitAndLossReport = () => {
 
 
       {/* Main Report Table Container */}
-      <div id="print-area" style={{ backgroundColor: 'var(--color-level-1)', borderRadius: 'var(--radius-lg)', border: '1px solid var(--color-border-structural)', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.05)', overflow: 'hidden' }}>
+      <div id="print-area" className="responsive-table-container" style={{ backgroundColor: 'var(--color-level-1)', borderRadius: 'var(--radius-lg)', border: '1px solid var(--color-border-structural)', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.05)', overflow: 'hidden' }}>
 
         {loading && (
           <div style={{ padding: '60px 20px', textAlign: 'center', color: 'var(--color-on-surface-variant)', fontSize: '14px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '12px' }}>

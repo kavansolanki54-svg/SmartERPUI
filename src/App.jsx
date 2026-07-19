@@ -35,6 +35,7 @@ import ContraVoucher from './pages/ContraVoucher';
 import JournalVoucherList from './pages/JournalVoucherList';
 import JournalVoucher from './pages/JournalVoucher';
 import ProfitAndLossReport from './pages/ProfitAndLossReport';
+import CashBankSummaryReport from './pages/CashBankSummaryReport';
 
 import Layout from './components/Layout';
 
@@ -102,6 +103,7 @@ function App() {
           <Route path="/Journal/create" element={<JournalVoucher />} />
           <Route path="/Journal/edit/:id" element={<JournalVoucher />} />
           <Route path="/profit-loss" element={<ProfitAndLossReport />} />
+          <Route path="/cash-bank-summary" element={<CashBankSummaryReport />} />
         </Route>
 
         <Route path="*" element={<Navigate to="/" replace />} />
