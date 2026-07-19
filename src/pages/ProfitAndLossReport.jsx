@@ -4,12 +4,12 @@ import toast from 'react-hot-toast';
 
 const ProfitAndLossReport = () => {
   const today = new Date();
-  
+
   // Calculate current financial year start (April 1st) and end (March 31st of next year)
   const currentMonth = today.getMonth();
   const currentYear = today.getFullYear();
   const fyStartYear = currentMonth < 3 ? currentYear - 1 : currentYear;
-  
+
   const formatDateString = (date) => {
     const yyyy = date.getFullYear();
     const mm = String(date.getMonth() + 1).padStart(2, '0');
@@ -24,7 +24,26 @@ const ProfitAndLossReport = () => {
   const [endDate, setEndDate] = useState(defaultEndDate);
   const [loading, setLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
-  
+
+  // Collapsible tree view states
+  const [expandedSections, setExpandedSections] = useState({
+    purchase: false,
+    directExpense: false,
+    indirectExpense: false,
+    sales: false,
+    directIncome: false,
+    indirectIncome: false
+  });
+  const [expandedSubgroups, setExpandedSubgroups] = useState({});
+
+  const toggleSection = (sec) => {
+    setExpandedSections(prev => ({ ...prev, [sec]: !prev[sec] }));
+  };
+
+  const toggleSubgroup = (groupKey) => {
+    setExpandedSubgroups(prev => ({ ...prev, [groupKey]: !prev[groupKey] }));
+  };
+
   // Drilldown States: 1 = PL Summary, 2 = Group Details, 3 = Ledger Summary, 4 = Voucher Details
   const [level, setLevel] = useState(1);
   const [currentGroupId, setCurrentGroupId] = useState(null);
@@ -39,8 +58,9 @@ const ProfitAndLossReport = () => {
   // Breadcrumbs history tracking
   const [breadcrumbs, setBreadcrumbs] = useState([{ name: 'Profit & Loss', level: 1 }]);
 
-  const formatCurrency = (val) => {
-    if (val === undefined || val === null || isNaN(val)) return '0.00';
+  const formatCurrency = (val, isLedger = false) => {
+    if (val === undefined || val === null || isNaN(val)) return isLedger ? '' : '0.00';
+    if (isLedger && Number(val) === 0) return '';
     const isNegative = val < 0;
     const absVal = Math.abs(val);
     const formatted = new Intl.NumberFormat('en-IN', {
@@ -160,17 +180,17 @@ const ProfitAndLossReport = () => {
     if (level === 1 && plData) {
       csvContent += `"DEBIT / EXPENSES","AMOUNT","CREDIT / INCOME","AMOUNT"\n`;
       const left = [
-        ["Purchase Accounts", plData.purchaseSections.reduce((a,c)=>a+c.totalAmount,0)],
-        ["Direct Expenses", plData.directExpenseSections.reduce((a,c)=>a+c.totalAmount,0)],
+        ["Purchase Accounts", plData.purchaseSections.reduce((a, c) => a + c.totalAmount, 0)],
+        ["Direct Expenses", plData.directExpenseSections.reduce((a, c) => a + c.totalAmount, 0)],
         ["Gross Loss", plData.grossLoss],
-        ["Indirect Expenses", plData.indirectExpenseSections.reduce((a,c)=>a+c.totalAmount,0)],
+        ["Indirect Expenses", plData.indirectExpenseSections.reduce((a, c) => a + c.totalAmount, 0)],
         ["Nett Profit", plData.netProfit]
       ];
       const right = [
-        ["Sales Accounts", plData.salesSections.reduce((a,c)=>a+c.totalAmount,0)],
-        ["Direct Incomes", plData.directIncomeSections.reduce((a,c)=>a+c.totalAmount,0)],
+        ["Sales Accounts", plData.salesSections.reduce((a, c) => a + c.totalAmount, 0)],
+        ["Direct Incomes", plData.directIncomeSections.reduce((a, c) => a + c.totalAmount, 0)],
         ["Gross Profit", plData.grossProfit],
-        ["Indirect Incomes", plData.indirectIncomeSections.reduce((a,c)=>a+c.totalAmount,0)],
+        ["Indirect Incomes", plData.indirectIncomeSections.reduce((a, c) => a + c.totalAmount, 0)],
         ["Nett Loss", plData.netLoss]
       ];
       for (let i = 0; i < 5; i++) {
@@ -210,9 +230,10 @@ const ProfitAndLossReport = () => {
 
   return (
     <div style={{ padding: '24px', backgroundColor: 'var(--color-background)', minHeight: '100vh', fontFamily: 'var(--font-family-base)' }}>
-      
+
       {/* Print Specific CSS Styles */}
-      <style dangerouslySetInnerHTML={{__html: `
+      <style dangerouslySetInnerHTML={{
+        __html: `
         @media print {
           body * {
             visibility: hidden;
@@ -231,75 +252,118 @@ const ProfitAndLossReport = () => {
         }
       `}} />
 
-      {/* Top Title & Header Buttons Row */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
+      {/* Combined Title, Date Filter & Actions Card */}
+      <div style={{
+        backgroundColor: 'var(--color-level-1)',
+        borderRadius: 'var(--radius-lg)',
+        padding: '16px 24px',
+        boxShadow: '0 1px 3px rgba(0,0,0,0.05)',
+        border: '1px solid var(--color-border-structural)',
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        marginBottom: '20px',
+        gap: '16px',
+        flexWrap: 'wrap'
+      }}>
+        {/* Left: Title */}
         <div>
-          <h1 style={{ fontSize: '24px', fontWeight: '700', color: 'var(--color-on-surface)', margin: 0, letterSpacing: '-0.5px' }}>Profit & Loss Account</h1>
-          <p style={{ margin: '4px 0 0 0', fontSize: '13px', color: 'var(--color-on-surface-variant)' }}>Summary of revenue, costs, and expenses with Tally drilldown.</p>
+          <h1 style={{ fontSize: '18px', fontWeight: '700', color: 'var(--color-on-surface)', margin: 0, letterSpacing: '-0.5px' }}>Profit & Loss</h1>
         </div>
-        <div style={{ display: 'flex', gap: '12px' }}>
-          <button 
-            onClick={handleExportCSV} 
-            style={{ 
-              padding: '8px 16px', 
-              backgroundColor: '#fff', 
-              color: '#16a34a', 
-              border: '1px solid #16a34a', 
-              borderRadius: 'var(--radius-md)', 
-              cursor: 'pointer', 
-              fontSize: '13px', 
-              fontWeight: '600', 
-              display: 'flex', 
-              alignItems: 'center', 
-              gap: '8px', 
-              boxShadow: '0 1px 2px rgba(0,0,0,0.05)' 
+
+        {/* Middle: Date Range Selectors */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <input
+            type="date"
+            value={startDate}
+            onChange={(e) => setStartDate(e.target.value)}
+            style={{ padding: '6px 12px', border: '1px solid var(--color-outline-variant)', borderRadius: 'var(--radius-md)', fontSize: '13px', color: 'var(--color-on-surface)' }}
+          />
+          <span style={{ fontSize: '13px', color: 'var(--color-on-surface-variant)' }}>to</span>
+          <input
+            type="date"
+            value={endDate}
+            onChange={(e) => setEndDate(e.target.value)}
+            style={{ padding: '6px 12px', border: '1px solid var(--color-outline-variant)', borderRadius: 'var(--radius-md)', fontSize: '13px', color: 'var(--color-on-surface)' }}
+          />
+        </div>
+
+        {/* Right: Search, Export & Print Actions */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+          <div style={{ position: 'relative', width: '220px' }}>
+            <i className="fa-solid fa-magnifying-glass" style={{ position: 'absolute', left: '10px', top: '9px', color: 'var(--color-outline)', fontSize: '12px' }}></i>
+            <input
+              type="text"
+              placeholder="Search..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              style={{ width: '100%', padding: '6px 10px 6px 32px', fontSize: '13px', border: '1px solid var(--color-outline-variant)', borderRadius: 'var(--radius-md)', color: 'var(--color-on-surface)' }}
+            />
+          </div>
+
+          <button
+            onClick={handleExportCSV}
+            style={{
+              padding: '6px 12px',
+              backgroundColor: '#fff',
+              color: '#16a34a',
+              border: '1px solid #16a34a',
+              borderRadius: 'var(--radius-md)',
+              cursor: 'pointer',
+              fontSize: '13px',
+              fontWeight: '600',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '6px',
+              boxShadow: '0 1px 2px rgba(0,0,0,0.05)'
             }}
           >
-            <i className="fa-solid fa-file-csv"></i> Export Excel
+            <i className="fa-solid fa-file-csv"></i> Export
           </button>
-          <button 
-            onClick={handlePrint} 
-            style={{ 
-              padding: '8px 16px', 
-              backgroundColor: 'var(--color-primary)', 
-              color: 'var(--color-on-primary)', 
-              border: 'none', 
-              borderRadius: 'var(--radius-md)', 
-              cursor: 'pointer', 
-              fontSize: '13px', 
-              fontWeight: '600', 
-              display: 'flex', 
-              alignItems: 'center', 
-              gap: '8px', 
-              boxShadow: '0 1px 2px rgba(0,0,0,0.05)' 
+
+          <button
+            onClick={handlePrint}
+            style={{
+              padding: '6px 12px',
+              backgroundColor: 'var(--color-primary)',
+              color: 'var(--color-on-primary)',
+              border: 'none',
+              borderRadius: 'var(--radius-md)',
+              cursor: 'pointer',
+              fontSize: '13px',
+              fontWeight: '600',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '6px',
+              boxShadow: '0 1px 2px rgba(0,0,0,0.05)'
             }}
           >
-            <i className="fa-solid fa-print"></i> Print / PDF
+            <i className="fa-solid fa-print"></i> Print
           </button>
         </div>
       </div>
 
       {/* Breadcrumb Navigation */}
-      <div style={{ 
-        backgroundColor: 'var(--color-level-1)', 
-        padding: '12px 20px', 
-        borderRadius: 'var(--radius-lg)', 
-        border: '1px solid var(--color-border-structural)', 
-        marginBottom: '20px', 
-        display: 'flex', 
-        alignItems: 'center', 
-        gap: '8px', 
+      <div style={{
+        backgroundColor: 'var(--color-level-1)',
+        padding: '12px 20px',
+        borderRadius: 'var(--radius-lg)',
+        border: '1px solid var(--color-border-structural)',
+        marginBottom: '20px',
+        display: 'flex',
+        alignItems: 'center',
+        gap: '8px',
         fontSize: '13px',
         boxShadow: '0 1px 3px rgba(0,0,0,0.05)'
       }}>
         {breadcrumbs.map((bc, idx) => (
           <React.Fragment key={idx}>
-            <span 
-              onClick={() => handleBreadcrumbClick(bc)} 
-              style={{ 
-                color: idx === breadcrumbs.length - 1 ? 'var(--color-on-surface)' : 'var(--color-primary)', 
+            <span
+              onClick={() => handleBreadcrumbClick(bc)}
+              style={{
+                color: idx === breadcrumbs.length - 1 ? 'var(--color-on-surface)' : 'var(--color-primary)',
                 cursor: idx === breadcrumbs.length - 1 ? 'default' : 'pointer',
-                fontWeight: idx === breadcrumbs.length - 1 ? '700' : '500' 
+                fontWeight: idx === breadcrumbs.length - 1 ? '700' : '500'
               }}
             >
               {bc.name}
@@ -309,49 +373,10 @@ const ProfitAndLossReport = () => {
         ))}
       </div>
 
-      {/* Date & Filter Card */}
-      <div style={{ 
-        backgroundColor: 'var(--color-level-1)', 
-        borderRadius: 'var(--radius-lg)', 
-        padding: '16px 20px', 
-        boxShadow: '0 1px 3px rgba(0,0,0,0.05)', 
-        border: '1px solid var(--color-border-structural)', 
-        display: 'flex', 
-        justifyContent: 'space-between',
-        alignItems: 'center', 
-        marginBottom: '20px'
-      }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <input 
-            type="date" 
-            value={startDate}
-            onChange={(e) => setStartDate(e.target.value)}
-            style={{ padding: '6px 12px', border: '1px solid var(--color-outline-variant)', borderRadius: 'var(--radius-md)', fontSize: '13px', color: 'var(--color-on-surface)' }}
-          />
-          <span style={{ fontSize: '13px', color: 'var(--color-on-surface-variant)' }}>to</span>
-          <input 
-            type="date" 
-            value={endDate}
-            onChange={(e) => setEndDate(e.target.value)}
-            style={{ padding: '6px 12px', border: '1px solid var(--color-outline-variant)', borderRadius: 'var(--radius-md)', fontSize: '13px', color: 'var(--color-on-surface)' }}
-          />
-        </div>
-
-        <div style={{ position: 'relative', width: '280px' }}>
-          <i className="fa-solid fa-magnifying-glass" style={{ position: 'absolute', left: '10px', top: '9px', color: 'var(--color-outline)', fontSize: '12px' }}></i>
-          <input 
-            type="text" 
-            placeholder="Search within current page..." 
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            style={{ width: '100%', padding: '6px 10px 6px 32px', fontSize: '13px', border: '1px solid var(--color-outline-variant)', borderRadius: 'var(--radius-md)', color: 'var(--color-on-surface)' }}
-          />
-        </div>
-      </div>
 
       {/* Main Report Table Container */}
       <div id="print-area" style={{ backgroundColor: 'var(--color-level-1)', borderRadius: 'var(--radius-lg)', border: '1px solid var(--color-border-structural)', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.05)', overflow: 'hidden' }}>
-        
+
         {loading && (
           <div style={{ padding: '60px 20px', textAlign: 'center', color: 'var(--color-on-surface-variant)', fontSize: '14px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '12px' }}>
             <span className="spinner-border text-primary" role="status" aria-hidden="true" style={{ width: '2rem', height: '2rem' }}></span>
@@ -370,63 +395,383 @@ const ProfitAndLossReport = () => {
                   <div style={{ width: '50%', padding: '12px 20px', fontWeight: '700', fontSize: '13px', color: 'var(--color-on-surface)' }}>CREDIT / INCOME</div>
                 </div>
 
-                {/* Table Content */}
-                <div style={{ display: 'flex', width: '100%', minHeight: '380px', fontSize: '14px' }}>
-                  
-                  {/* Left Column - Expenses */}
+                {/* ==================== PART 1: TRADING ACCOUNT (Gross Profit calculation) ==================== */}
+                <div style={{ display: 'flex', width: '100%', borderBottom: '2px solid var(--color-border-structural)', fontSize: '14px', backgroundColor: 'var(--color-level-1)' }}>
+
+                  {/* Left Column - Trading Expenses */}
                   <div style={{ width: '50%', borderRight: '1px solid var(--color-border-structural)', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
                     <div style={{ padding: '16px 20px' }}>
                       {/* Purchase Accounts */}
-                      <div 
-                        onClick={() => handleGroupClick(plData.purchaseGroupId)}
-                        style={{ display: 'flex', justifyContent: 'space-between', padding: '10px 12px', borderRadius: 'var(--radius-md)', cursor: 'pointer', fontWeight: '600', transition: 'background 0.2s', borderBottom: '1px dashed var(--color-border-structural)' }}
-                        onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'var(--color-surface-container-low)'}
-                        onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
-                      >
-                        <span style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                          <i className="fa-solid fa-cart-shopping text-warning" style={{ fontSize: '13px' }}></i>
-                          Purchase Accounts
-                        </span>
-                        <span>{formatCurrency(plData.purchaseSections.reduce((acc, curr) => acc + curr.totalAmount, 0))}</span>
+                      <div style={{ marginBottom: '16px' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 12px', borderRadius: 'var(--radius-md)', fontWeight: '600', borderBottom: '1px dashed var(--color-border-structural)' }}>
+                          <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                            <button onClick={() => toggleSection('purchase')} style={{ border: 'none', background: 'none', cursor: 'pointer', padding: '2px 6px', color: 'var(--color-outline)', display: 'flex', alignItems: 'center' }}>
+                              <i className={`fa-solid ${expandedSections.purchase ? 'fa-chevron-down' : 'fa-chevron-right'}`} style={{ fontSize: '11px' }}></i>
+                            </button>
+                            <span onClick={() => handleGroupClick(plData.purchaseGroupId)} style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }} onMouseEnter={(e) => e.currentTarget.style.color = 'var(--color-primary)'} onMouseLeave={(e) => e.currentTarget.style.color = 'inherit'}>
+                              <i className="fa-solid fa-cart-shopping text-warning" style={{ fontSize: '13px' }}></i>
+                              Purchase Accounts
+                            </span>
+                          </span>
+                          <span>{formatCurrency(plData.purchaseSections.reduce((acc, curr) => acc + curr.totalAmount, 0))}</span>
+                        </div>
+
+                        {expandedSections.purchase && (
+                          <div style={{ paddingLeft: '16px', marginTop: '4px' }}>
+                            {plData.purchaseSections.map((sec, sIdx) => {
+                              const subKey = `purchase-${sec.groupName}-${sIdx}`;
+                              const isSubExpanded = !!expandedSubgroups[subKey];
+                              const isCategoryGroup = sec.groupName.toLowerCase() === "purchase accounts";
+
+                              if (isCategoryGroup) {
+                                return sec.ledgers.map((led, lIdx) => (
+                                  <div key={`led-${lIdx}`} onClick={() => handleLedgerClick(led.ledgerId)} style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 12px', borderBottom: '1px dashed var(--color-border-structural)', cursor: 'pointer', fontSize: '12px', color: 'var(--color-on-surface-variant)', paddingLeft: '32px' }} onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'var(--color-surface-container-low)'} onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}>
+                                    <span><i className="fa-solid fa-file-invoice text-secondary" style={{ marginRight: '6px', fontSize: '11px' }}></i>{led.ledgerName}</span>
+                                    <span>{formatCurrency(led.amount, true)}</span>
+                                  </div>
+                                ));
+                              }
+
+                              return (
+                                <div key={subKey} style={{ fontSize: '13px' }}>
+                                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '6px 12px', borderBottom: '1px solid var(--color-border-structural)', fontWeight: '500' }}>
+                                    <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                      <button onClick={() => toggleSubgroup(subKey)} style={{ border: 'none', background: 'none', cursor: 'pointer', padding: '2px 4px', color: 'var(--color-outline)', display: 'flex', alignItems: 'center' }}>
+                                        <i className={`fa-solid ${isSubExpanded ? 'fa-chevron-down' : 'fa-chevron-right'}`} style={{ fontSize: '10px' }}></i>
+                                      </button>
+                                      <span onClick={() => handleGroupClick(sec.GroupId || plData.purchaseGroupId)} style={{ cursor: 'pointer', color: 'var(--color-on-surface)' }} onMouseEnter={(e) => e.currentTarget.style.color = 'var(--color-primary)'} onMouseLeave={(e) => e.currentTarget.style.color = 'var(--color-on-surface)'}>
+                                        {sec.groupName}
+                                      </span>
+                                    </span>
+                                    <span style={{ fontWeight: '600' }}>{formatCurrency(sec.totalAmount)}</span>
+                                  </div>
+                                  {isSubExpanded && (
+                                    <div style={{ paddingLeft: '24px', backgroundColor: 'var(--color-surface-container-lowest)' }}>
+                                      {sec.ledgers.map((led, lIdx) => (
+                                        <div key={lIdx} onClick={() => handleLedgerClick(led.ledgerId)} style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 12px', borderBottom: '1px dashed var(--color-border-structural)', cursor: 'pointer', fontSize: '12px', color: 'var(--color-on-surface-variant)' }} onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'var(--color-surface-container-low)'} onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}>
+                                          <span><i className="fa-solid fa-file-invoice text-secondary" style={{ marginRight: '6px', fontSize: '11px' }}></i>{led.ledgerName}</span>
+                                          <span>{formatCurrency(led.amount, true)}</span>
+                                        </div>
+                                      ))}
+                                    </div>
+                                  )}
+                                </div>
+                              );
+                            })}
+                          </div>
+                        )}
                       </div>
 
                       {/* Direct Expenses */}
-                      <div 
-                        onClick={() => handleGroupClick(plData.directExpenseGroupId)}
-                        style={{ display: 'flex', justifyContent: 'space-between', padding: '10px 12px', borderRadius: 'var(--radius-md)', cursor: 'pointer', fontWeight: '600', transition: 'background 0.2s', borderBottom: '1px dashed var(--color-border-structural)' }}
-                        onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'var(--color-surface-container-low)'}
-                        onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
-                      >
-                        <span style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                          <i className="fa-solid fa-bolt text-danger" style={{ fontSize: '13px' }}></i>
-                          Direct Expenses
-                        </span>
-                        <span>{formatCurrency(plData.directExpenseSections.reduce((acc, curr) => acc + curr.totalAmount, 0))}</span>
+                      <div style={{ marginBottom: '16px' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 12px', borderRadius: 'var(--radius-md)', fontWeight: '600', borderBottom: '1px dashed var(--color-border-structural)' }}>
+                          <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                            <button onClick={() => toggleSection('directExpense')} style={{ border: 'none', background: 'none', cursor: 'pointer', padding: '2px 6px', color: 'var(--color-outline)', display: 'flex', alignItems: 'center' }}>
+                              <i className={`fa-solid ${expandedSections.directExpense ? 'fa-chevron-down' : 'fa-chevron-right'}`} style={{ fontSize: '11px' }}></i>
+                            </button>
+                            <span onClick={() => handleGroupClick(plData.directExpenseGroupId)} style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }} onMouseEnter={(e) => e.currentTarget.style.color = 'var(--color-primary)'} onMouseLeave={(e) => e.currentTarget.style.color = 'inherit'}>
+                              <i className="fa-solid fa-bolt text-danger" style={{ fontSize: '13px' }}></i>
+                              Direct Expenses
+                            </span>
+                          </span>
+                          <span>{formatCurrency(plData.directExpenseSections.reduce((acc, curr) => acc + curr.totalAmount, 0))}</span>
+                        </div>
+
+                        {expandedSections.directExpense && (
+                          <div style={{ paddingLeft: '16px', marginTop: '4px' }}>
+                            {plData.directExpenseSections.map((sec, sIdx) => {
+                              const subKey = `directExpense-${sec.groupName}-${sIdx}`;
+                              const isSubExpanded = !!expandedSubgroups[subKey];
+                              const isCategoryGroup = sec.groupName.toLowerCase() === "direct expenses";
+
+                              if (isCategoryGroup) {
+                                return sec.ledgers.map((led, lIdx) => (
+                                  <div key={`led-${lIdx}`} onClick={() => handleLedgerClick(led.ledgerId)} style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 12px', borderBottom: '1px dashed var(--color-border-structural)', cursor: 'pointer', fontSize: '12px', color: 'var(--color-on-surface-variant)', paddingLeft: '32px' }} onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'var(--color-surface-container-low)'} onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}>
+                                    <span><i className="fa-solid fa-file-invoice text-secondary" style={{ marginRight: '6px', fontSize: '11px' }}></i>{led.ledgerName}</span>
+                                    <span>{formatCurrency(led.amount, true)}</span>
+                                  </div>
+                                ));
+                              }
+
+                              return (
+                                <div key={subKey} style={{ fontSize: '13px' }}>
+                                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '6px 12px', borderBottom: '1px solid var(--color-border-structural)', fontWeight: '500' }}>
+                                    <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                      <button onClick={() => toggleSubgroup(subKey)} style={{ border: 'none', background: 'none', cursor: 'pointer', padding: '2px 4px', color: 'var(--color-outline)', display: 'flex', alignItems: 'center' }}>
+                                        <i className={`fa-solid ${isSubExpanded ? 'fa-chevron-down' : 'fa-chevron-right'}`} style={{ fontSize: '10px' }}></i>
+                                      </button>
+                                      <span onClick={() => handleGroupClick(sec.GroupId || plData.directExpenseGroupId)} style={{ cursor: 'pointer', color: 'var(--color-on-surface)' }} onMouseEnter={(e) => e.currentTarget.style.color = 'var(--color-primary)'} onMouseLeave={(e) => e.currentTarget.style.color = 'var(--color-on-surface)'}>
+                                        {sec.groupName}
+                                      </span>
+                                    </span>
+                                    <span style={{ fontWeight: '600' }}>{formatCurrency(sec.totalAmount)}</span>
+                                  </div>
+                                  {isSubExpanded && (
+                                    <div style={{ paddingLeft: '24px', backgroundColor: 'var(--color-surface-container-lowest)' }}>
+                                      {sec.ledgers.map((led, lIdx) => (
+                                        <div key={lIdx} onClick={() => handleLedgerClick(led.ledgerId)} style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 12px', borderBottom: '1px dashed var(--color-border-structural)', cursor: 'pointer', fontSize: '12px', color: 'var(--color-on-surface-variant)' }} onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'var(--color-surface-container-low)'} onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}>
+                                          <span><i className="fa-solid fa-file-invoice text-secondary" style={{ marginRight: '6px', fontSize: '11px' }}></i>{led.ledgerName}</span>
+                                          <span>{formatCurrency(led.amount, true)}</span>
+                                        </div>
+                                      ))}
+                                    </div>
+                                  )}
+                                </div>
+                              );
+                            })}
+                          </div>
+                        )}
                       </div>
 
-                      {/* Indirect Expenses */}
-                      <div 
-                        onClick={() => handleGroupClick(plData.indirectExpenseGroupId)}
-                        style={{ display: 'flex', justifyContent: 'space-between', padding: '10px 12px', borderRadius: 'var(--radius-md)', cursor: 'pointer', fontWeight: '600', transition: 'background 0.2s', borderBottom: '1px dashed var(--color-border-structural)', marginTop: '20px' }}
-                        onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'var(--color-surface-container-low)'}
-                        onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
-                      >
-                        <span style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                          <i className="fa-solid fa-file-invoice text-secondary" style={{ fontSize: '13px' }}></i>
-                          Indirect Expenses
-                        </span>
-                        <span>{formatCurrency(plData.indirectExpenseSections.reduce((acc, curr) => acc + curr.totalAmount, 0))}</span>
-                      </div>
+                      {/* Gross Profit carried over (balancing Debit side) */}
+                      {plData.grossProfit > 0 && (
+                        <div style={{ display: 'flex', justifyContent: 'space-between', padding: '10px 12px', fontWeight: '700', color: 'var(--color-on-surface)', borderBottom: '1px dashed var(--color-border-structural)', fontStyle: 'italic' }}>
+                          <span>Gross Profit c/o</span>
+                          <span>{formatCurrency(plData.grossProfit)}</span>
+                        </div>
+                      )}
                     </div>
 
-                    {/* Bottom part - Total Expenses & Nett Profit */}
-                    <div style={{ padding: '16px 20px', borderTop: '1px solid var(--color-border-structural)', backgroundColor: 'var(--color-level-0)' }}>
+                    {/* Subtotal Trading Expenses */}
+                    <div style={{ padding: '16px 20px', borderTop: '1px solid var(--color-border-structural)', backgroundColor: 'var(--color-surface-container-low)' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', fontWeight: '700', padding: '6px 12px', fontSize: '14px', color: 'var(--color-on-surface)', borderTop: '1px solid var(--color-border-structural)', borderBottom: '1px solid var(--color-border-structural)' }}>
+                        <span>Total</span>
+                        <span>{formatCurrency(plData.grossProfit > 0 ? plData.totalTradingCredit : plData.totalTradingDebit)}</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Right Column - Trading Incomes */}
+                  <div style={{ width: '50%', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+                    <div style={{ padding: '16px 20px' }}>
+                      {/* Sales Accounts */}
+                      <div style={{ marginBottom: '16px' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 12px', borderRadius: 'var(--radius-md)', fontWeight: '600', borderBottom: '1px dashed var(--color-border-structural)' }}>
+                          <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                            <button onClick={() => toggleSection('sales')} style={{ border: 'none', background: 'none', cursor: 'pointer', padding: '2px 6px', color: 'var(--color-outline)', display: 'flex', alignItems: 'center' }}>
+                              <i className={`fa-solid ${expandedSections.sales ? 'fa-chevron-down' : 'fa-chevron-right'}`} style={{ fontSize: '11px' }}></i>
+                            </button>
+                            <span onClick={() => handleGroupClick(plData.salesGroupId)} style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }} onMouseEnter={(e) => e.currentTarget.style.color = 'var(--color-primary)'} onMouseLeave={(e) => e.currentTarget.style.color = 'inherit'}>
+                              <i className="fa-solid fa-tags text-info" style={{ fontSize: '13px' }}></i>
+                              Sales Accounts
+                            </span>
+                          </span>
+                          <span>{formatCurrency(plData.salesSections.reduce((acc, curr) => acc + curr.totalAmount, 0))}</span>
+                        </div>
+
+                        {expandedSections.sales && (
+                          <div style={{ paddingLeft: '16px', marginTop: '4px' }}>
+                            {plData.salesSections.map((sec, sIdx) => {
+                              const subKey = `sales-${sec.groupName}-${sIdx}`;
+                              const isSubExpanded = !!expandedSubgroups[subKey];
+                              const isCategoryGroup = sec.groupName.toLowerCase() === "sales accounts";
+
+                              if (isCategoryGroup) {
+                                return sec.ledgers.map((led, lIdx) => (
+                                  <div key={`led-${lIdx}`} onClick={() => handleLedgerClick(led.ledgerId)} style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 12px', borderBottom: '1px dashed var(--color-border-structural)', cursor: 'pointer', fontSize: '12px', color: 'var(--color-on-surface-variant)', paddingLeft: '32px' }} onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'var(--color-surface-container-low)'} onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}>
+                                    <span><i className="fa-solid fa-file-invoice text-secondary" style={{ marginRight: '6px', fontSize: '11px' }}></i>{led.ledgerName}</span>
+                                    <span>{formatCurrency(led.amount, true)}</span>
+                                  </div>
+                                ));
+                              }
+
+                              return (
+                                <div key={subKey} style={{ fontSize: '13px' }}>
+                                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '6px 12px', borderBottom: '1px solid var(--color-border-structural)', fontWeight: '500' }}>
+                                    <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                      <button onClick={() => toggleSubgroup(subKey)} style={{ border: 'none', background: 'none', cursor: 'pointer', padding: '2px 4px', color: 'var(--color-outline)', display: 'flex', alignItems: 'center' }}>
+                                        <i className={`fa-solid ${isSubExpanded ? 'fa-chevron-down' : 'fa-chevron-right'}`} style={{ fontSize: '10px' }}></i>
+                                      </button>
+                                      <span onClick={() => handleGroupClick(sec.GroupId || plData.salesGroupId)} style={{ cursor: 'pointer', color: 'var(--color-on-surface)' }} onMouseEnter={(e) => e.currentTarget.style.color = 'var(--color-primary)'} onMouseLeave={(e) => e.currentTarget.style.color = 'var(--color-on-surface)'}>
+                                        {sec.groupName}
+                                      </span>
+                                    </span>
+                                    <span style={{ fontWeight: '600' }}>{formatCurrency(sec.totalAmount)}</span>
+                                  </div>
+                                  {isSubExpanded && (
+                                    <div style={{ paddingLeft: '24px', backgroundColor: 'var(--color-surface-container-lowest)' }}>
+                                      {sec.ledgers.map((led, lIdx) => (
+                                        <div key={lIdx} onClick={() => handleLedgerClick(led.ledgerId)} style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 12px', borderBottom: '1px dashed var(--color-border-structural)', cursor: 'pointer', fontSize: '12px', color: 'var(--color-on-surface-variant)' }} onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'var(--color-surface-container-low)'} onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}>
+                                          <span><i className="fa-solid fa-file-invoice text-secondary" style={{ marginRight: '6px', fontSize: '11px' }}></i>{led.ledgerName}</span>
+                                          <span>{formatCurrency(led.amount, true)}</span>
+                                        </div>
+                                      ))}
+                                    </div>
+                                  )}
+                                </div>
+                              );
+                            })}
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Direct Incomes */}
+                      <div style={{ marginBottom: '16px' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 12px', borderRadius: 'var(--radius-md)', fontWeight: '600', borderBottom: '1px dashed var(--color-border-structural)' }}>
+                          <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                            <button onClick={() => toggleSection('directIncome')} style={{ border: 'none', background: 'none', cursor: 'pointer', padding: '2px 6px', color: 'var(--color-outline)', display: 'flex', alignItems: 'center' }}>
+                              <i className={`fa-solid ${expandedSections.directIncome ? 'fa-chevron-down' : 'fa-chevron-right'}`} style={{ fontSize: '11px' }}></i>
+                            </button>
+                            <span onClick={() => handleGroupClick(plData.directIncomeGroupId)} style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }} onMouseEnter={(e) => e.currentTarget.style.color = 'var(--color-primary)'} onMouseLeave={(e) => e.currentTarget.style.color = 'inherit'}>
+                              <i className="fa-solid fa-folder-closed text-success" style={{ fontSize: '13px' }}></i>
+                              Direct Incomes
+                            </span>
+                          </span>
+                          <span>{formatCurrency(plData.directIncomeSections.reduce((acc, curr) => acc + curr.totalAmount, 0))}</span>
+                        </div>
+
+                        {expandedSections.directIncome && (
+                          <div style={{ paddingLeft: '16px', marginTop: '4px' }}>
+                            {plData.directIncomeSections.map((sec, sIdx) => {
+                              const subKey = `directIncome-${sec.groupName}-${sIdx}`;
+                              const isSubExpanded = !!expandedSubgroups[subKey];
+                              const isCategoryGroup = sec.groupName.toLowerCase() === "direct incomes";
+
+                              if (isCategoryGroup) {
+                                return sec.ledgers.map((led, lIdx) => (
+                                  <div key={`led-${lIdx}`} onClick={() => handleLedgerClick(led.ledgerId)} style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 12px', borderBottom: '1px dashed var(--color-border-structural)', cursor: 'pointer', fontSize: '12px', color: 'var(--color-on-surface-variant)', paddingLeft: '32px' }} onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'var(--color-surface-container-low)'} onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}>
+                                    <span><i className="fa-solid fa-file-invoice text-secondary" style={{ marginRight: '6px', fontSize: '11px' }}></i>{led.ledgerName}</span>
+                                    <span>{formatCurrency(led.amount, true)}</span>
+                                  </div>
+                                ));
+                              }
+
+                              return (
+                                <div key={subKey} style={{ fontSize: '13px' }}>
+                                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '6px 12px', borderBottom: '1px solid var(--color-border-structural)', fontWeight: '500' }}>
+                                    <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                      <button onClick={() => toggleSubgroup(subKey)} style={{ border: 'none', background: 'none', cursor: 'pointer', padding: '2px 4px', color: 'var(--color-outline)', display: 'flex', alignItems: 'center' }}>
+                                        <i className={`fa-solid ${isSubExpanded ? 'fa-chevron-down' : 'fa-chevron-right'}`} style={{ fontSize: '10px' }}></i>
+                                      </button>
+                                      <span onClick={() => handleGroupClick(sec.GroupId || plData.directIncomeGroupId)} style={{ cursor: 'pointer', color: 'var(--color-on-surface)' }} onMouseEnter={(e) => e.currentTarget.style.color = 'var(--color-primary)'} onMouseLeave={(e) => e.currentTarget.style.color = 'var(--color-on-surface)'}>
+                                        {sec.groupName}
+                                      </span>
+                                    </span>
+                                    <span style={{ fontWeight: '600' }}>{formatCurrency(sec.totalAmount)}</span>
+                                  </div>
+                                  {isSubExpanded && (
+                                    <div style={{ paddingLeft: '24px', backgroundColor: 'var(--color-surface-container-lowest)' }}>
+                                      {sec.ledgers.map((led, lIdx) => (
+                                        <div key={lIdx} onClick={() => handleLedgerClick(led.ledgerId)} style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 12px', borderBottom: '1px dashed var(--color-border-structural)', cursor: 'pointer', fontSize: '12px', color: 'var(--color-on-surface-variant)' }} onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'var(--color-surface-container-low)'} onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}>
+                                          <span><i className="fa-solid fa-file-invoice text-secondary" style={{ marginRight: '6px', fontSize: '11px' }}></i>{led.ledgerName}</span>
+                                          <span>{formatCurrency(led.amount, true)}</span>
+                                        </div>
+                                      ))}
+                                    </div>
+                                  )}
+                                </div>
+                              );
+                            })}
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Gross Loss carried over (balancing Credit side) */}
+                      {plData.grossLoss > 0 && (
+                        <div style={{ display: 'flex', justifyContent: 'space-between', padding: '10px 12px', fontWeight: '700', color: 'var(--color-on-surface)', borderBottom: '1px dashed var(--color-border-structural)', fontStyle: 'italic' }}>
+                          <span>Gross Loss c/o</span>
+                          <span>{formatCurrency(plData.grossLoss)}</span>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Subtotal Trading Income */}
+                    <div style={{ padding: '16px 20px', borderTop: '1px solid var(--color-border-structural)', backgroundColor: 'var(--color-surface-container-low)' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', fontWeight: '700', padding: '6px 12px', fontSize: '14px', color: 'var(--color-on-surface)', borderTop: '1px solid var(--color-border-structural)', borderBottom: '1px solid var(--color-border-structural)' }}>
+                        <span>Total</span>
+                        <span>{formatCurrency(plData.grossProfit > 0 ? plData.totalTradingCredit : plData.totalTradingDebit)}</span>
+                      </div>
+                    </div>
+                  </div>
+
+                </div>
+
+                {/* ==================== PART 2: INCOME & EXPENSES (Net Profit calculation) ==================== */}
+                <div style={{ display: 'flex', width: '100%', minHeight: '280px', fontSize: '14px', backgroundColor: 'var(--color-level-1)' }}>
+
+                  {/* Left Column - Indirect Expenses */}
+                  <div style={{ width: '50%', borderRight: '1px solid var(--color-border-structural)', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+                    <div style={{ padding: '16px 20px' }}>
+                      {/* Gross Loss brought forward */}
+                      {plData.grossLoss > 0 && (
+                        <div style={{ display: 'flex', justifyContent: 'space-between', padding: '10px 12px', fontWeight: '700', color: '#dc2626', borderBottom: '1px dashed var(--color-border-structural)', marginBottom: '16px' }}>
+                          <span>Gross Profit b/f (Loss)</span>
+                          <span>{formatCurrency(plData.grossLoss)}</span>
+                        </div>
+                      )}
+
+                      {/* Indirect Expenses */}
+                      <div style={{ marginBottom: '16px' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 12px', borderRadius: 'var(--radius-md)', fontWeight: '600', borderBottom: '1px dashed var(--color-border-structural)' }}>
+                          <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                            <button onClick={() => toggleSection('indirectExpense')} style={{ border: 'none', background: 'none', cursor: 'pointer', padding: '2px 6px', color: 'var(--color-outline)', display: 'flex', alignItems: 'center' }}>
+                              <i className={`fa-solid ${expandedSections.indirectExpense ? 'fa-chevron-down' : 'fa-chevron-right'}`} style={{ fontSize: '11px' }}></i>
+                            </button>
+                            <span onClick={() => handleGroupClick(plData.indirectExpenseGroupId)} style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }} onMouseEnter={(e) => e.currentTarget.style.color = 'var(--color-primary)'} onMouseLeave={(e) => e.currentTarget.style.color = 'inherit'}>
+                              <i className="fa-solid fa-file-invoice text-secondary" style={{ fontSize: '13px' }}></i>
+                              Indirect Expenses
+                            </span>
+                          </span>
+                          <span>{formatCurrency(plData.indirectExpenseSections.reduce((acc, curr) => acc + curr.totalAmount, 0))}</span>
+                        </div>
+
+                        {expandedSections.indirectExpense && (
+                          <div style={{ paddingLeft: '16px', marginTop: '4px' }}>
+                            {plData.indirectExpenseSections.map((sec, sIdx) => {
+                              const subKey = `indirectExpense-${sec.groupName}-${sIdx}`;
+                              const isSubExpanded = !!expandedSubgroups[subKey];
+                              const isCategoryGroup = sec.groupName.toLowerCase() === "indirect expenses";
+
+                              if (isCategoryGroup) {
+                                return sec.ledgers.map((led, lIdx) => (
+                                  <div key={`led-${lIdx}`} onClick={() => handleLedgerClick(led.ledgerId)} style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 12px', borderBottom: '1px dashed var(--color-border-structural)', cursor: 'pointer', fontSize: '12px', color: 'var(--color-on-surface-variant)', paddingLeft: '32px' }} onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'var(--color-surface-container-low)'} onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}>
+                                    <span><i className="fa-solid fa-file-invoice text-secondary" style={{ marginRight: '6px', fontSize: '11px' }}></i>{led.ledgerName}</span>
+                                    <span>{formatCurrency(led.amount, true)}</span>
+                                  </div>
+                                ));
+                              }
+
+                              return (
+                                <div key={subKey} style={{ fontSize: '13px' }}>
+                                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '6px 12px', borderBottom: '1px solid var(--color-border-structural)', fontWeight: '500' }}>
+                                    <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                      <button onClick={() => toggleSubgroup(subKey)} style={{ border: 'none', background: 'none', cursor: 'pointer', padding: '2px 4px', color: 'var(--color-outline)', display: 'flex', alignItems: 'center' }}>
+                                        <i className={`fa-solid ${isSubExpanded ? 'fa-chevron-down' : 'fa-chevron-right'}`} style={{ fontSize: '10px' }}></i>
+                                      </button>
+                                      <span onClick={() => handleGroupClick(sec.GroupId || plData.indirectExpenseGroupId)} style={{ cursor: 'pointer', color: 'var(--color-on-surface)' }} onMouseEnter={(e) => e.currentTarget.style.color = 'var(--color-primary)'} onMouseLeave={(e) => e.currentTarget.style.color = 'var(--color-on-surface)'}>
+                                        {sec.groupName}
+                                      </span>
+                                    </span>
+                                    <span style={{ fontWeight: '600' }}>{formatCurrency(sec.totalAmount)}</span>
+                                  </div>
+                                  {isSubExpanded && (
+                                    <div style={{ paddingLeft: '24px', backgroundColor: 'var(--color-surface-container-lowest)' }}>
+                                      {sec.ledgers.map((led, lIdx) => (
+                                        <div key={lIdx} onClick={() => handleLedgerClick(led.ledgerId)} style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 12px', borderBottom: '1px dashed var(--color-border-structural)', cursor: 'pointer', fontSize: '12px', color: 'var(--color-on-surface-variant)' }} onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'var(--color-surface-container-low)'} onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}>
+                                          <span><i className="fa-solid fa-file-invoice text-secondary" style={{ marginRight: '6px', fontSize: '11px' }}></i>{led.ledgerName}</span>
+                                          <span>{formatCurrency(led.amount, true)}</span>
+                                        </div>
+                                      ))}
+                                    </div>
+                                  )}
+                                </div>
+                              );
+                            })}
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Nett Profit (balancing Debit side) */}
                       {plData.netProfit > 0 && (
-                        <div style={{ display: 'flex', justifyContent: 'space-between', fontWeight: '700', color: '#16a34a', padding: '6px 12px', backgroundColor: '#f0fdf4', border: '1px solid #bbf7d0', borderRadius: 'var(--radius-md)', marginBottom: '12px' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', padding: '10px 12px', fontWeight: '700', color: '#16a34a', borderBottom: '1px dashed var(--color-border-structural)' }}>
                           <span>Nett Profit</span>
                           <span>{formatCurrency(plData.netProfit)}</span>
                         </div>
                       )}
+                    </div>
+
+                    {/* Final Bottom Total (Debit) */}
+                    <div style={{ padding: '16px 20px', borderTop: '1px solid var(--color-border-structural)', backgroundColor: 'var(--color-level-0)' }}>
                       <div style={{ display: 'flex', justifyContent: 'space-between', fontWeight: '700', padding: '6px 12px', fontSize: '15px', color: 'var(--color-on-surface)' }}>
                         <span>Total</span>
                         <span>{formatCurrency(plData.balancedTotal)}</span>
@@ -434,60 +779,89 @@ const ProfitAndLossReport = () => {
                     </div>
                   </div>
 
-                  {/* Right Column - Incomes */}
+                  {/* Right Column - Indirect Incomes */}
                   <div style={{ width: '50%', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
                     <div style={{ padding: '16px 20px' }}>
-                      {/* Sales Accounts */}
-                      <div 
-                        onClick={() => handleGroupClick(plData.salesGroupId)}
-                        style={{ display: 'flex', justifyContent: 'space-between', padding: '10px 12px', borderRadius: 'var(--radius-md)', cursor: 'pointer', fontWeight: '600', transition: 'background 0.2s', borderBottom: '1px dashed var(--color-border-structural)' }}
-                        onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'var(--color-surface-container-low)'}
-                        onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
-                      >
-                        <span style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                          <i className="fa-solid fa-tags text-info" style={{ fontSize: '13px' }}></i>
-                          Sales Accounts
-                        </span>
-                        <span>{formatCurrency(plData.salesSections.reduce((acc, curr) => acc + curr.totalAmount, 0))}</span>
-                      </div>
-
-                      {/* Direct Incomes */}
-                      <div 
-                        onClick={() => handleGroupClick(plData.directIncomeGroupId)}
-                        style={{ display: 'flex', justifyContent: 'space-between', padding: '10px 12px', borderRadius: 'var(--radius-md)', cursor: 'pointer', fontWeight: '600', transition: 'background 0.2s', borderBottom: '1px dashed var(--color-border-structural)' }}
-                        onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'var(--color-surface-container-low)'}
-                        onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
-                      >
-                        <span style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                          <i className="fa-solid fa-folder-closed text-success" style={{ fontSize: '13px' }}></i>
-                          Direct Incomes
-                        </span>
-                        <span>{formatCurrency(plData.directIncomeSections.reduce((acc, curr) => acc + curr.totalAmount, 0))}</span>
-                      </div>
+                      {/* Gross Profit brought forward */}
+                      {plData.grossProfit > 0 && (
+                        <div style={{ display: 'flex', justifyContent: 'space-between', padding: '10px 12px', fontWeight: '700', color: '#16a34a', borderBottom: '1px dashed var(--color-border-structural)', marginBottom: '16px' }}>
+                          <span>Gross Profit b/f</span>
+                          <span>{formatCurrency(plData.grossProfit)}</span>
+                        </div>
+                      )}
 
                       {/* Indirect Incomes */}
-                      <div 
-                        onClick={() => handleGroupClick(plData.indirectIncomeGroupId)}
-                        style={{ display: 'flex', justifyContent: 'space-between', padding: '10px 12px', borderRadius: 'var(--radius-md)', cursor: 'pointer', fontWeight: '600', transition: 'background 0.2s', borderBottom: '1px dashed var(--color-border-structural)', marginTop: '20px' }}
-                        onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'var(--color-surface-container-low)'}
-                        onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
-                      >
-                        <span style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                          <i className="fa-solid fa-dollar-sign text-primary" style={{ fontSize: '13px' }}></i>
-                          Indirect Incomes
-                        </span>
-                        <span>{formatCurrency(plData.indirectIncomeSections.reduce((acc, curr) => acc + curr.totalAmount, 0))}</span>
-                      </div>
-                    </div>
+                      <div style={{ marginBottom: '16px' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 12px', borderRadius: 'var(--radius-md)', fontWeight: '600', borderBottom: '1px dashed var(--color-border-structural)' }}>
+                          <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                            <button onClick={() => toggleSection('indirectIncome')} style={{ border: 'none', background: 'none', cursor: 'pointer', padding: '2px 6px', color: 'var(--color-outline)', display: 'flex', alignItems: 'center' }}>
+                              <i className={`fa-solid ${expandedSections.indirectIncome ? 'fa-chevron-down' : 'fa-chevron-right'}`} style={{ fontSize: '11px' }}></i>
+                            </button>
+                            <span onClick={() => handleGroupClick(plData.indirectIncomeGroupId)} style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }} onMouseEnter={(e) => e.currentTarget.style.color = 'var(--color-primary)'} onMouseLeave={(e) => e.currentTarget.style.color = 'inherit'}>
+                              <i className="fa-solid fa-dollar-sign text-primary" style={{ fontSize: '13px' }}></i>
+                              Indirect Incomes
+                            </span>
+                          </span>
+                          <span>{formatCurrency(plData.indirectIncomeSections.reduce((acc, curr) => acc + curr.totalAmount, 0))}</span>
+                        </div>
 
-                    {/* Bottom part - Total Incomes & Nett Loss */}
-                    <div style={{ padding: '16px 20px', borderTop: '1px solid var(--color-border-structural)', backgroundColor: 'var(--color-level-0)' }}>
+                        {expandedSections.indirectIncome && (
+                          <div style={{ paddingLeft: '16px', marginTop: '4px' }}>
+                            {plData.indirectIncomeSections.map((sec, sIdx) => {
+                              const subKey = `indirectIncome-${sec.groupName}-${sIdx}`;
+                              const isSubExpanded = !!expandedSubgroups[subKey];
+                              const isCategoryGroup = sec.groupName.toLowerCase() === "indirect incomes";
+
+                              if (isCategoryGroup) {
+                                return sec.ledgers.map((led, lIdx) => (
+                                  <div key={`led-${lIdx}`} onClick={() => handleLedgerClick(led.ledgerId)} style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 12px', borderBottom: '1px dashed var(--color-border-structural)', cursor: 'pointer', fontSize: '12px', color: 'var(--color-on-surface-variant)', paddingLeft: '32px' }} onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'var(--color-surface-container-low)'} onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}>
+                                    <span><i className="fa-solid fa-file-invoice text-secondary" style={{ marginRight: '6px', fontSize: '11px' }}></i>{led.ledgerName}</span>
+                                    <span>{formatCurrency(led.amount, true)}</span>
+                                  </div>
+                                ));
+                              }
+
+                              return (
+                                <div key={subKey} style={{ fontSize: '13px' }}>
+                                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '6px 12px', borderBottom: '1px solid var(--color-border-structural)', fontWeight: '500' }}>
+                                    <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                      <button onClick={() => toggleSubgroup(subKey)} style={{ border: 'none', background: 'none', cursor: 'pointer', padding: '2px 4px', color: 'var(--color-outline)', display: 'flex', alignItems: 'center' }}>
+                                        <i className={`fa-solid ${isSubExpanded ? 'fa-chevron-down' : 'fa-chevron-right'}`} style={{ fontSize: '10px' }}></i>
+                                      </button>
+                                      <span onClick={() => handleGroupClick(sec.GroupId || plData.indirectIncomeGroupId)} style={{ cursor: 'pointer', color: 'var(--color-on-surface)' }} onMouseEnter={(e) => e.currentTarget.style.color = 'var(--color-primary)'} onMouseLeave={(e) => e.currentTarget.style.color = 'var(--color-on-surface)'}>
+                                        {sec.groupName}
+                                      </span>
+                                    </span>
+                                    <span style={{ fontWeight: '600' }}>{formatCurrency(sec.totalAmount)}</span>
+                                  </div>
+                                  {isSubExpanded && (
+                                    <div style={{ paddingLeft: '24px', backgroundColor: 'var(--color-surface-container-lowest)' }}>
+                                      {sec.ledgers.map((led, lIdx) => (
+                                        <div key={lIdx} onClick={() => handleLedgerClick(led.ledgerId)} style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 12px', borderBottom: '1px dashed var(--color-border-structural)', cursor: 'pointer', fontSize: '12px', color: 'var(--color-on-surface-variant)' }} onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'var(--color-surface-container-low)'} onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}>
+                                          <span><i className="fa-solid fa-file-invoice text-secondary" style={{ marginRight: '6px', fontSize: '11px' }}></i>{led.ledgerName}</span>
+                                          <span>{formatCurrency(led.amount, true)}</span>
+                                        </div>
+                                      ))}
+                                    </div>
+                                  )}
+                                </div>
+                              );
+                            })}
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Nett Loss (balancing Credit side) */}
                       {plData.netLoss > 0 && (
-                        <div style={{ display: 'flex', justifyContent: 'space-between', fontWeight: '700', color: '#dc2626', padding: '6px 12px', backgroundColor: '#fef2f2', border: '1px solid #fecaca', borderRadius: 'var(--radius-md)', marginBottom: '12px' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', padding: '10px 12px', fontWeight: '700', color: '#dc2626', borderBottom: '1px dashed var(--color-border-structural)' }}>
                           <span>Nett Loss</span>
                           <span>{formatCurrency(plData.netLoss)}</span>
                         </div>
                       )}
+                    </div>
+
+                    {/* Final Bottom Total (Credit) */}
+                    <div style={{ padding: '16px 20px', borderTop: '1px solid var(--color-border-structural)', backgroundColor: 'var(--color-level-0)' }}>
                       <div style={{ display: 'flex', justifyContent: 'space-between', fontWeight: '700', padding: '6px 12px', fontSize: '15px', color: 'var(--color-on-surface)' }}>
                         <span>Total</span>
                         <span>{formatCurrency(plData.balancedTotal)}</span>
@@ -514,7 +888,7 @@ const ProfitAndLossReport = () => {
                   {groupData.subGroups
                     .filter(g => g.groupName.toLowerCase().includes(searchQuery.toLowerCase()))
                     .map((g, idx) => (
-                      <div 
+                      <div
                         key={`sub-${idx}`}
                         onClick={() => handleGroupClick(g.groupId)}
                         style={{ display: 'flex', padding: '10px 20px', borderBottom: '1px solid var(--color-border-structural)', cursor: 'pointer', fontWeight: '700', color: 'var(--color-on-surface)', transition: 'background 0.2s' }}
@@ -531,7 +905,7 @@ const ProfitAndLossReport = () => {
                   {groupData.ledgers
                     .filter(l => l.ledgerName.toLowerCase().includes(searchQuery.toLowerCase()))
                     .map((l, idx) => (
-                      <div 
+                      <div
                         key={`led-${idx}`}
                         onClick={() => handleLedgerClick(l.ledgerId)}
                         style={{ display: 'flex', padding: '10px 20px', borderBottom: '1px solid var(--color-border-structural)', cursor: 'pointer', color: 'var(--color-on-surface)', transition: 'background 0.2s' }}
@@ -554,8 +928,8 @@ const ProfitAndLossReport = () => {
                   <span style={{ flexGrow: 1 }}>Total {groupData.groupName}</span>
                   <span style={{ width: '220px', textAlign: 'right' }}>
                     {formatCurrency(
-                      groupData.subGroups.reduce((a,c)=>a+c.amount, 0) + 
-                      groupData.ledgers.reduce((a,c)=>a+c.amount, 0)
+                      groupData.subGroups.reduce((a, c) => a + c.amount, 0) +
+                      groupData.ledgers.reduce((a, c) => a + c.amount, 0)
                     )}
                   </span>
                 </div>
@@ -596,16 +970,16 @@ const ProfitAndLossReport = () => {
                   </div>
 
                   <div style={{ marginTop: '24px', display: 'flex', justifyContent: 'center' }}>
-                    <button 
-                      onClick={() => setLevel(4)} 
-                      style={{ 
-                        padding: '10px 24px', 
-                        backgroundColor: 'var(--color-primary)', 
-                        color: 'var(--color-on-primary)', 
-                        border: 'none', 
-                        borderRadius: 'var(--radius-md)', 
-                        cursor: 'pointer', 
-                        fontWeight: '600', 
+                    <button
+                      onClick={() => setLevel(4)}
+                      style={{
+                        padding: '10px 24px',
+                        backgroundColor: 'var(--color-primary)',
+                        color: 'var(--color-on-primary)',
+                        border: 'none',
+                        borderRadius: 'var(--radius-md)',
+                        cursor: 'pointer',
+                        fontWeight: '600',
                         fontSize: '13px',
                         boxShadow: '0 2px 4px rgba(0,0,0,0.08)'
                       }}
@@ -646,7 +1020,7 @@ const ProfitAndLossReport = () => {
 
                   {/* Vouchers list */}
                   {voucherData.vouchers.map((v, idx) => (
-                    <div 
+                    <div
                       key={idx}
                       style={{ display: 'flex', padding: '10px 16px', borderBottom: '1px solid var(--color-border-structural)' }}
                     >
