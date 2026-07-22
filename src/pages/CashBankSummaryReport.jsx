@@ -248,6 +248,16 @@ const CashBankSummaryReport = () => {
 
   const isBankODCategory = getParentCategoryName() === 'Bank OD A/c';
 
+  const formatTallyDate = (dateStr) => {
+    if (!dateStr) return '';
+    const date = new Date(dateStr);
+    if (isNaN(date.getTime())) return dateStr;
+    const day = date.getDate();
+    const month = date.toLocaleString('en-US', { month: 'short' });
+    const year = String(date.getFullYear()).substring(2);
+    return `${day}-${month}-${year}`;
+  };
+
   return (
     <div style={{ padding: '24px', backgroundColor: 'var(--color-background)', minHeight: '100vh', fontFamily: 'var(--font-family-base)' }}>
       {/* Print Specific & Mobile Responsive CSS */}
@@ -457,7 +467,10 @@ const CashBankSummaryReport = () => {
             {level === 1 ? 'Cash/Bank Summary' : level === 2 ? 'Group Summary' : level === 3 ? 'Monthly Summary' : 'Ledger Vouchers'}
           </div>
           <div>
-            {summaryData?.companyName || monthlyData?.ledgerName || 'Kavan Inc.'}
+            {level === 1 ? (summaryData?.companyName || 'SmartERP') : 
+             level === 2 ? (groupData?.companyName || 'SmartERP') : 
+             level === 3 ? `${monthlyData?.ledgerName} (${monthlyData?.companyName || ''})` : 
+             `${currentLedgerName} (${voucherData?.companyName || ''})`}
           </div>
         </div>
 
@@ -477,7 +490,7 @@ const CashBankSummaryReport = () => {
                       <th style={{ textAlign: 'left', padding: '12px 20px', fontWeight: '700' }}>Particulars</th>
                       <th colSpan="2" style={{ textAlign: 'right', padding: '12px 20px', borderBottom: '1.5px solid var(--color-border-structural)' }}>
                         <div style={{ fontSize: '11px', fontWeight: '500', color: 'var(--color-on-surface-variant)', marginBottom: '2px' }}>
-                          Kavan Inc.<br/>{summaryData.periodDisplay}
+                          {summaryData.companyName}<br/>{summaryData.periodDisplay}
                         </div>
                         Closing Balance
                       </th>
@@ -569,7 +582,7 @@ const CashBankSummaryReport = () => {
                       <th style={{ textAlign: 'left', padding: '12px 20px', fontWeight: '700' }}>Particulars</th>
                       <th colSpan="2" style={{ textAlign: 'right', padding: '12px 20px', borderBottom: '1.5px solid var(--color-border-structural)' }}>
                         <div style={{ fontSize: '11px', fontWeight: '500', color: 'var(--color-on-surface-variant)', marginBottom: '2px' }}>
-                          {groupData.groupName}<br/>Kavan Inc.<br/>{startDate ? `${startDate.split('-')[2]}-${startDate.split('-')[1]}-${startDate.split('-')[0].substring(2)}` : ''} to {endDate ? `${endDate.split('-')[2]}-${endDate.split('-')[1]}-${endDate.split('-')[0].substring(2)}` : ''}
+                          {groupData.groupName}<br/>{groupData.companyName}<br/>{formatTallyDate(startDate)} to {formatTallyDate(endDate)}
                         </div>
                         Closing Balance
                       </th>
@@ -646,7 +659,14 @@ const CashBankSummaryReport = () => {
                       <th colSpan="2" style={{ textAlign: 'center', padding: '12px 20px', borderBottom: '1.5px solid var(--color-border-structural)' }}>
                         Transactions
                       </th>
-                      <th style={{ width: '220px', textAlign: 'right', padding: '12px 20px', fontWeight: '700' }}>Closing Balance</th>
+                      <th style={{ width: '220px', textAlign: 'right', padding: '12px 20px', fontWeight: '700', borderBottom: '1.5px solid var(--color-border-structural)' }}>
+                        <div style={{ fontSize: '11px', fontWeight: '500', color: 'var(--color-on-surface-variant)', marginBottom: '2px' }}>
+                          {monthlyData.ledgerName}<br/>
+                          {monthlyData.companyName}<br/>
+                          {formatTallyDate(startDate)} to {formatTallyDate(endDate)}
+                        </div>
+                        Closing Balance
+                      </th>
                     </tr>
                     <tr style={{ borderBottom: '1px solid var(--color-border-structural)', backgroundColor: 'var(--color-surface-container-low)' }}>
                       <th></th>
@@ -718,7 +738,13 @@ const CashBankSummaryReport = () => {
                       <th style={{ textAlign: 'left', padding: '12px 16px', fontWeight: '700' }}>Vch No.</th>
                       <th style={{ width: '150px', textAlign: 'right', padding: '12px 16px', fontWeight: '700', borderLeft: '1px solid var(--color-border-structural)' }}>Debit</th>
                       <th style={{ width: '150px', textAlign: 'right', padding: '12px 16px', fontWeight: '700', borderLeft: '1px solid var(--color-border-structural)' }}>Credit</th>
-                      <th style={{ width: '180px', textAlign: 'right', padding: '12px 16px', fontWeight: '700', borderLeft: '1px solid var(--color-border-structural)' }}>Closing Balance</th>
+                      <th style={{ width: '180px', textAlign: 'right', padding: '12px 16px', fontWeight: '700', borderLeft: '1px solid var(--color-border-structural)', borderBottom: '1.5px solid var(--color-border-structural)' }}>
+                        <div style={{ fontSize: '11px', fontWeight: '500', color: 'var(--color-on-surface-variant)', marginBottom: '2px' }}>
+                          {voucherData.companyName}<br/>
+                          {formatTallyDate(voucherStartDate)} to {formatTallyDate(voucherEndDate)}
+                        </div>
+                        Closing Balance
+                      </th>
                     </tr>
                   </thead>
                   <tbody>
