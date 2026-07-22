@@ -259,7 +259,16 @@ const CashBankSummaryReport = () => {
   };
 
   return (
-    <div style={{ padding: '24px', backgroundColor: 'var(--color-background)', minHeight: '100vh', fontFamily: 'var(--font-family-base)' }}>
+    <div style={{
+      padding: '24px',
+      backgroundColor: 'var(--color-background)',
+      height: 'calc(100vh - 112px)',
+      fontFamily: 'var(--font-family-base)',
+      display: 'flex',
+      flexDirection: 'column',
+      boxSizing: 'border-box',
+      overflow: 'hidden'
+    }}>
       {/* Print Specific & Mobile Responsive CSS */}
       <style dangerouslySetInnerHTML={{
         __html: `
@@ -449,7 +458,10 @@ const CashBankSummaryReport = () => {
         borderRadius: 'var(--radius-lg)',
         border: '1px solid var(--color-border-structural)',
         boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.05)',
-        overflow: 'hidden'
+        overflow: 'hidden',
+        flex: 1,
+        display: 'flex',
+        flexDirection: 'column'
       }}>
         {/* Top Banner */}
         <div style={{
@@ -480,7 +492,7 @@ const CashBankSummaryReport = () => {
             <span>Calculating report...</span>
           </div>
         ) : (
-          <>
+          <div style={{ flex: 1, overflowY: 'auto' }}>
             {/* LEVEL 1: Cash/Bank Summary */}
             {level === 1 && summaryData && (
               <div>
@@ -728,7 +740,7 @@ const CashBankSummaryReport = () => {
 
             {/* LEVEL 4: Ledger Vouchers */}
             {level === 4 && voucherData && (
-              <div>
+              <div style={{ border: '1px solid var(--color-border-structural)', borderRadius: 'var(--radius-lg)', position: 'relative' }}>
                 <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px', color: 'var(--color-on-surface)' }}>
                   <thead>
                     <tr style={{ borderBottom: '1.5px solid var(--color-border-structural)', backgroundColor: 'var(--color-surface-container-low)' }}>
@@ -800,7 +812,7 @@ const CashBankSummaryReport = () => {
                 </table>
               </div>
             )}
-          </>
+          </div>
         )}
       </div>
     </div>

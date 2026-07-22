@@ -229,7 +229,16 @@ const ProfitAndLossReport = () => {
   };
 
   return (
-    <div style={{ padding: '24px', backgroundColor: 'var(--color-background)', minHeight: '100vh', fontFamily: 'var(--font-family-base)' }}>
+    <div style={{
+      padding: '24px',
+      backgroundColor: 'var(--color-background)',
+      height: 'calc(100vh - 112px)',
+      fontFamily: 'var(--font-family-base)',
+      display: 'flex',
+      flexDirection: 'column',
+      boxSizing: 'border-box',
+      overflow: 'hidden'
+    }}>
 
       {/* Print Specific & Mobile Responsive CSS Styles */}
       <style dangerouslySetInnerHTML={{
@@ -413,7 +422,16 @@ const ProfitAndLossReport = () => {
 
 
       {/* Main Report Table Container */}
-      <div id="print-area" className="responsive-table-container" style={{ backgroundColor: 'var(--color-level-1)', borderRadius: 'var(--radius-lg)', border: '1px solid var(--color-border-structural)', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.05)', overflow: 'hidden' }}>
+      <div id="print-area" className="responsive-table-container" style={{
+        backgroundColor: 'var(--color-level-1)',
+        borderRadius: 'var(--radius-lg)',
+        border: '1px solid var(--color-border-structural)',
+        boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.05)',
+        overflow: 'hidden',
+        flex: 1,
+        display: 'flex',
+        flexDirection: 'column'
+      }}>
 
         {loading && (
           <div style={{ padding: '60px 20px', textAlign: 'center', color: 'var(--color-on-surface-variant)', fontSize: '14px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '12px' }}>
@@ -423,7 +441,7 @@ const ProfitAndLossReport = () => {
         )}
 
         {!loading && (
-          <>
+          <div style={{ flex: 1, overflowY: 'auto' }}>
             {/* LEVEL 1: Profit & Loss summary */}
             {level === 1 && plData && (
               <div>
@@ -1031,7 +1049,7 @@ const ProfitAndLossReport = () => {
 
             {/* LEVEL 4: Voucher Details / Register */}
             {level === 4 && voucherData && (
-              <div>
+              <div style={{ border: '1px solid var(--color-border-structural)', borderRadius: 'var(--radius-lg)' }}>
                 {/* Table Header */}
                 <div style={{ display: 'flex', borderBottom: '1px solid var(--color-border-structural)', backgroundColor: 'var(--color-surface-container)', fontWeight: '700', fontSize: '12px', color: 'var(--color-on-surface)' }}>
                   <span style={{ width: '100px', padding: '12px 16px' }}>Date</span>
@@ -1089,7 +1107,7 @@ const ProfitAndLossReport = () => {
                 </div>
               </div>
             )}
-          </>
+          </div>
         )}
       </div>
     </div>
