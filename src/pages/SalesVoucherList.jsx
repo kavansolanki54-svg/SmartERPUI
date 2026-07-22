@@ -1,16 +1,30 @@
-import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import React, { useState, useEffect, useMemo } from 'react';
 import { toast } from 'react-hot-toast';
 import { getSalesVouchers, deleteSalesVoucher } from '../services/api';
+import EnterpriseDataGrid from '../components/EnterpriseDataGrid';
+
+const fmtDate = (d) => {
+  if (!d) return '-';
+  const dt = new Date(d);
+  if (isNaN(dt.getTime())) return '-';
+  return `${String(dt.getDate()).padStart(2, '0')}-${String(dt.getMonth() + 1).padStart(2, '0')}-${dt.getFullYear()}`;
+};
+
+const statusLabel = (id) => id === 2 ? 'Posted' : id === 3 ? 'Cancelled' : 'Draft';
+
+const COLUMNS = [
+  { key: 'voucherNo', label: 'VOUCHER NO.', align: 'left', sortable: true, filterable: true, filterType: 'text', width: '150px' },
+  { key: 'voucherDateFormatted', label: 'DATE', align: 'left', sortable: true, filterable: true, filterType: 'text', width: '130px' },
+  { key: 'partyName', label: 'PARTY / CUSTOMER', align: 'left', sortable: true, filterable: true, filterType: 'text', width: '220px' },
+  { key: 'narration', label: 'NARRATION', align: 'left', sortable: true, filterable: true, filterType: 'text', width: null },
+  { key: 'totalAmount', label: 'AMOUNT', align: 'right', sortable: true, filterable: true, filterType: 'text', width: '150px', isSum: true },
+  { key: 'statusText', label: 'STATUS', align: 'center', sortable: true, filterable: true, filterType: 'select', options: ['All', 'Draft', 'Posted', 'Cancelled'], width: '130px' },
+  { key: 'action', label: 'ACTION', align: 'center', sortable: false, filterable: false, width: '100px' },
+];
 
 const SalesVoucherList = () => {
   const [vouchers, setVouchers] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [searchTerm, setSearchTerm] = useState('');
-
-  // Pagination state
-  const [currentPage, setCurrentPage] = useState(1);
-  const [entriesPerPage, setEntriesPerPage] = useState(10);
 
   const fetchVouchers = async () => {
     setLoading(true);
@@ -19,11 +33,11 @@ const SalesVoucherList = () => {
       if (response.success && response.data) {
         setVouchers(response.data);
       } else {
-        toast.error(response.message || "Failed to load sales vouchers");
+        toast.error(response.message || 'Failed to load sales vouchers');
       }
     } catch (error) {
-      console.error("Failed to fetch sales vouchers", error);
-      toast.error("An error occurred while loading sales vouchers");
+      console.error(error);
+      toast.error('Error loading sales vouchers');
     } finally {
       setLoading(false);
     }
@@ -36,210 +50,69 @@ const SalesVoucherList = () => {
   const handleDelete = (id) => {
     toast((t) => (
       <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-        <span style={{ fontSize: '14px', fontWeight: '500', color: 'var(--color-on-surface)' }}>
-          Are you sure you want to delete this sales voucher?
-        </span>
+        <span style={{ fontSize: '14px', fontWeight: '500' }}>Delete this sales voucher?</span>
         <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
-          <button
-            onClick={() => {
-              toast.dismiss(t.id);
-            }}
-            style={{ padding: '6px 12px', backgroundColor: '#f1f5f9', color: 'var(--color-on-surface-variant)', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '12px', fontWeight: '600' }}
-          >
-            Cancel
-          </button>
-          <button
-            onClick={async () => {
-              toast.dismiss(t.id);
-              try {
-                const res = await deleteSalesVoucher(id);
-                if (res.success) {
-                  toast.success('Sales voucher deleted successfully');
-                  fetchVouchers();
-                } else {
-                  toast.error(res.message || 'Failed to delete sales voucher');
-                }
-              } catch (err) {
-                console.error(err);
-                toast.error('An error occurred while deleting');
+          <button onClick={() => toast.dismiss(t.id)} style={{ padding: '6px 12px', backgroundColor: '#f1f5f9', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '12px', fontWeight: '600' }}>Cancel</button>
+          <button onClick={async () => {
+            toast.dismiss(t.id);
+            try {
+              const res = await deleteSalesVoucher(id);
+              if (res.success) {
+                toast.success('Deleted successfully');
+                fetchVouchers();
+              } else {
+                toast.error(res.message || 'Failed to delete');
               }
-            }}
-            style={{ padding: '6px 12px', backgroundColor: '#ef4444', color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '12px', fontWeight: '600' }}
-          >
-            Delete
-          </button>
+            } catch {
+              toast.error('Error deleting sales voucher');
+            }
+          }} style={{ padding: '6px 12px', backgroundColor: '#ef4444', color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '12px', fontWeight: '600' }}>Delete</button>
         </div>
       </div>
     ), { duration: Infinity });
   };
 
-  // Filter and paginate
-  const filteredVouchers = vouchers.filter(v => {
-    const vNo = String(v.voucherNo || '').toLowerCase();
-    const date = String(v.voucherDate || '').toLowerCase();
-    
-    return vNo.includes(searchTerm.toLowerCase()) ||
-           date.includes(searchTerm.toLowerCase());
-  });
+  const enrichedData = useMemo(() => {
+    return vouchers.map(v => ({
+      ...v,
+      voucherDateFormatted: fmtDate(v.voucherDate),
+      partyName: v.partyLedgerName || v.customerLedgerName || '-',
+      statusText: statusLabel(v.voucherStatus),
+      totalAmount: parseFloat(v.totalAmount || 0)
+    }));
+  }, [vouchers]);
 
-  const totalPages = Math.ceil(filteredVouchers.length / entriesPerPage);
-  const currentEntries = filteredVouchers.slice((currentPage - 1) * entriesPerPage, currentPage * entriesPerPage);
-
-  const handlePageChange = (page) => {
-    if (page >= 1 && page <= totalPages) {
-      setCurrentPage(page);
+  const customRenderers = {
+    statusText: (val, row) => {
+      const id = row.voucherStatus;
+      const c = id === 2 ? { icon: 'fa-circle-check', bg: '#d1fae5', color: '#065f46' }
+              : id === 3 ? { icon: 'fa-circle-xmark', bg: '#fee2e2', color: '#dc2626' }
+              :            { icon: 'fa-clock', bg: '#fef3c7', color: '#92400e' };
+      return (
+        <span style={{ color: c.color, backgroundColor: c.bg, padding: '3px 10px', borderRadius: '20px', fontSize: '10px', fontWeight: '700', letterSpacing: '0.4px', display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+          <i className={`fa-solid ${c.icon}`} style={{ fontSize: '9px' }}></i>{val.toUpperCase()}
+        </span>
+      );
     }
-  };
-
-  const renderStatus = (statusId) => {
-    if (statusId === 2) {
-      return <span style={{ color: '#16a34a', backgroundColor: '#dcfce7', padding: '4px 8px', borderRadius: '4px', fontSize: '11px', fontWeight: '700' }}>POSTED</span>;
-    } else if (statusId === 3) {
-      return <span style={{ color: '#ef4444', backgroundColor: '#fee2e2', padding: '4px 8px', borderRadius: '4px', fontSize: '11px', fontWeight: '700' }}>CANCELLED</span>;
-    }
-    return <span style={{ color: '#ca8a04', backgroundColor: '#fef9c3', padding: '4px 8px', borderRadius: '4px', fontSize: '11px', fontWeight: '700' }}>DRAFT</span>;
   };
 
   return (
-    <>
-      <div style={{ backgroundColor: '#f8f9fa', minHeight: '100%', padding: '24px' }}>
-
-        {/* Header */}
-        <div className="dashboard-header-row" style={{ marginBottom: '16px' }}>
-          <div style={{ fontSize: '18px', fontWeight: '700', color: 'var(--color-on-surface)' }}>Sales Voucher</div>
-          <Link
-            to="/Sales/create"
-            style={{
-              backgroundColor: 'var(--color-primary)',
-              color: '#fff',
-              padding: '8px 20px',
-              borderRadius: '4px',
-              textDecoration: 'none',
-              fontSize: '14px',
-              fontWeight: '500',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '8px'
-            }}
-          >
-            <i className="fa-solid fa-plus"></i> Add Sales Voucher
-          </Link>
-        </div>
-
-        <div style={{ height: '1px', backgroundColor: 'var(--color-border-structural)', marginBottom: '24px' }}></div>
-
-        {/* Filters */}
-        <div className="list-filters-row">
-          <div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <select
-                value={entriesPerPage}
-                onChange={(e) => { setEntriesPerPage(Number(e.target.value)); setCurrentPage(1); }}
-                style={{ padding: '6px 32px 6px 12px', borderRadius: '6px', border: '1px solid var(--color-border-structural)', backgroundColor: '#fff', appearance: 'none', backgroundImage: 'url("data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'12\' height=\'12\' viewBox=\'0 0 24 24\' fill=\'none\' stroke=\'%236c757d\' stroke-width=\'2\' stroke-linecap=\'round\' stroke-linejoin=\'round\'%3E%3Cpolyline points=\'6 9 12 15 18 9\'%3E%3C/polyline%3E%3C/svg%3E")', backgroundRepeat: 'no-repeat', backgroundPosition: 'right 12px center', fontSize: '13px' }}>
-                <option value={10}>10</option>
-                <option value={25}>25</option>
-                <option value={50}>50</option>
-              </select>
-              <span style={{ fontSize: '13px', color: 'var(--color-on-surface-variant)' }}>entries per page</span>
-            </div>
-          </div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-            <label style={{ fontSize: '13px', color: 'var(--color-on-surface-variant)' }}>Search:</label>
-            <input
-              type="text"
-              value={searchTerm}
-              onChange={(e) => { setSearchTerm(e.target.value); setCurrentPage(1); }}
-              placeholder="Voucher No, Date..."
-              style={{ padding: '6px 12px', borderRadius: '6px', border: '1px solid var(--color-border-structural)', width: '250px', fontSize: '13px', outline: 'none' }}
-            />
-          </div>
-        </div>
-
-        {/* Table */}
-        <div style={{ overflowX: 'auto', backgroundColor: '#fff', borderRadius: '8px', border: '1px solid var(--color-border-structural)' }}>
-          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '14px' }}>
-            <thead>
-              <tr style={{ borderBottom: '1px solid var(--color-border-structural)', backgroundColor: '#f8f9fa' }}>
-                <th style={{ padding: '12px 16px', textAlign: 'left', fontWeight: '600', color: 'var(--color-on-surface)' }}>Voucher No</th>
-                <th style={{ padding: '12px 16px', textAlign: 'left', fontWeight: '600', color: 'var(--color-on-surface)' }}>Date</th>
-                <th style={{ padding: '12px 16px', textAlign: 'left', fontWeight: '600', color: 'var(--color-on-surface)' }}>Total Amount</th>
-                <th style={{ padding: '12px 16px', textAlign: 'left', fontWeight: '600', color: 'var(--color-on-surface)' }}>Status</th>
-                <th style={{ padding: '12px 16px', textAlign: 'left', fontWeight: '600', color: 'var(--color-on-surface)' }}>Action</th>
-              </tr>
-            </thead>
-            <tbody>
-              {loading ? (
-                <tr>
-                  <td colSpan="5" style={{ padding: '32px', textAlign: 'center', color: 'var(--color-primary)' }}>
-                    <i className="fa-solid fa-circle-notch fa-spin fa-2x"></i>
-                  </td>
-                </tr>
-              ) : currentEntries.length > 0 ? currentEntries.map((v) => {
-                const dateObj = new Date(v.voucherDate);
-                const formattedDate = !isNaN(dateObj.getTime()) ? 
-                  `${String(dateObj.getDate()).padStart(2, '0')}-${String(dateObj.getMonth() + 1).padStart(2, '0')}-${dateObj.getFullYear()}` : '-';
-                return (
-                  <tr key={v.salesVoucherHeaderId} style={{ borderBottom: '1px solid var(--color-border-structural)' }}>
-                    <td style={{ padding: '12px 16px', color: 'var(--color-on-surface-variant)', fontWeight: '500' }}>{v.voucherNo || '-'}</td>
-                    <td style={{ padding: '12px 16px', color: 'var(--color-on-surface)' }}>{formattedDate}</td>
-                    <td style={{ padding: '12px 16px', color: 'var(--color-on-surface-variant)', fontWeight: '600' }}>₹ {parseFloat(v.totalAmount || 0).toFixed(2)}</td>
-                    <td style={{ padding: '12px 16px' }}>{renderStatus(v.voucherStatus)}</td>
-                    <td style={{ padding: '12px 16px' }}>
-                      <div style={{ display: 'flex', gap: '8px' }}>
-                        <Link to={`/Sales/edit/${v.salesVoucherHeaderId}`} style={{ backgroundColor: '#f1f5f9', color: '#0ea5e9', border: '1px solid #e2e8f0', borderRadius: '4px', width: '28px', height: '28px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', textDecoration: 'none' }}>
-                          <i className="fa-solid fa-pencil" style={{ fontSize: '12px' }}></i>
-                        </Link>
-                        <button onClick={() => handleDelete(v.salesVoucherHeaderId)} style={{ backgroundColor: '#fef2f2', color: '#ef4444', border: '1px solid #fee2e2', borderRadius: '4px', width: '28px', height: '28px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
-                          <i className="fa-solid fa-trash-can" style={{ fontSize: '12px' }}></i>
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                );
-              }) : (
-                <tr>
-                  <td colSpan="5" style={{ padding: '16px', textAlign: 'center', color: 'var(--color-outline)' }}>No sales vouchers found</td>
-                </tr>
-              )}
-            </tbody>
-          </table>
-        </div>
-
-        {/* Footer / Pagination */}
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '16px' }}>
-          <div style={{ fontSize: '13px', color: 'var(--color-on-surface-variant)' }}>
-            Showing {filteredVouchers.length === 0 ? 0 : (currentPage - 1) * entriesPerPage + 1} to {Math.min(currentPage * entriesPerPage, filteredVouchers.length)} of {filteredVouchers.length} entries
-          </div>
-
-          {totalPages > 0 && (
-           <div style={{ display: 'flex', gap: '4px' }}>
-              <button disabled={currentPage === 1} onClick={() => handlePageChange(1)} style={{ padding: '6px 12px', backgroundColor: '#fff', border: '1px solid var(--color-border-structural)', borderRadius: '4px', color: currentPage === 1 ? 'var(--color-outline)' : 'var(--color-on-surface-variant)', cursor: currentPage === 1 ? 'not-allowed' : 'pointer' }}>&laquo;</button>
-              <button disabled={currentPage === 1} onClick={() => handlePageChange(currentPage - 1)} style={{ padding: '6px 12px', backgroundColor: '#fff', border: '1px solid var(--color-border-structural)', borderRadius: '4px', color: currentPage === 1 ? 'var(--color-outline)' : 'var(--color-on-surface-variant)', cursor: currentPage === 1 ? 'not-allowed' : 'pointer' }}>&#8249;</button>
-
-              {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
-                <button
-                  key={page}
-                  onClick={() => handlePageChange(page)}
-                  style={{
-                    padding: '6px 12px',
-                    backgroundColor: currentPage === page ? 'var(--color-primary)' : '#fff',
-                    border: `1px solid ${currentPage === page ? 'var(--color-primary)' : 'var(--color-border-structural)'}`,
-                    borderRadius: '4px',
-                    color: currentPage === page ? '#fff' : 'var(--color-on-surface-variant)',
-                    cursor: 'pointer'
-                  }}>
-                  {page}
-                </button>
-              ))}
-
-              <button disabled={currentPage === totalPages} onClick={() => handlePageChange(currentPage + 1)} style={{ padding: '6px 12px', backgroundColor: '#fff', border: '1px solid var(--color-border-structural)', borderRadius: '4px', color: currentPage === totalPages ? 'var(--color-outline)' : 'var(--color-on-surface-variant)', cursor: currentPage === totalPages ? 'not-allowed' : 'pointer' }}>&#8250;</button>
-              <button disabled={currentPage === totalPages} onClick={() => handlePageChange(totalPages)} style={{ padding: '6px 12px', backgroundColor: '#fff', border: '1px solid var(--color-border-structural)', borderRadius: '4px', color: currentPage === totalPages ? 'var(--color-outline)' : 'var(--color-on-surface-variant)', cursor: currentPage === totalPages ? 'not-allowed' : 'pointer' }}>&raquo;</button>
-            </div>
-          )}
-        </div>
-
-      </div>
-    </>
+    <div className="list-page-container">
+      <EnterpriseDataGrid
+        title="Sales Voucher"
+        icon="fa-chart-line"
+        columns={COLUMNS}
+        data={enrichedData}
+        loading={loading}
+        createLink="/Sales/create"
+        createLabel="Add Sales Voucher"
+        editLinkPrefix="/Sales/edit"
+        onDelete={handleDelete}
+        idKey="salesVoucherHeaderId"
+        customRenderers={customRenderers}
+        onRefresh={fetchVouchers}
+      />
+    </div>
   );
 };
 

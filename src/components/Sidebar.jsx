@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 
-const MenuItem = ({ menu, activePath, onCloseMobile }) => {
+const MenuItem = ({ menu, activePath, onCloseMobile, isOpen, onToggle }) => {
   const navigate = useNavigate();
   // Helper to normalize URLs for matching
   const normalize = (path) => (path ? (path.startsWith('/') ? path : `/${path}`).toLowerCase() : '');
@@ -9,16 +9,13 @@ const MenuItem = ({ menu, activePath, onCloseMobile }) => {
 
   const hasSubMenus = menu.subMenus && menu.subMenus.length > 0;
   const isExactActive = normalizedActivePath === normalize(menu.url) && !hasSubMenus;
-  const hasActiveChild = hasSubMenus && menu.subMenus.some(sub => normalizedActivePath === normalize(sub.url));
-
-  const [isOpen, setIsOpen] = useState(hasActiveChild);
 
   const isActive = isExactActive;
 
   const toggleSubMenu = (e) => {
     if (hasSubMenus) {
       e.preventDefault();
-      setIsOpen(!isOpen);
+      onToggle();
     }
   };
 
@@ -128,6 +125,7 @@ const MenuItem = ({ menu, activePath, onCloseMobile }) => {
 const Sidebar = ({ menus = [], isMobileOpen, onCloseMobile }) => {
   const location = useLocation();
   const activePath = location.pathname;
+  const [openModuleId, setOpenModuleId] = useState(null);
 
   // Dynamically append Employee Master menu if it is not returned by the backend API
   const displayedMenus = [...menus];
@@ -317,6 +315,18 @@ const Sidebar = ({ menus = [], isMobileOpen, onCloseMobile }) => {
     });
   }
 
+  // Sync open menu with active route on navigation
+  useEffect(() => {
+    const normalize = (path) => (path ? (path.startsWith('/') ? path : `/${path}`).toLowerCase() : '');
+    const normalizedActivePath = normalize(activePath);
+    const activeMenu = displayedMenus.find(m => 
+      m.subMenus && m.subMenus.some(sub => normalize(sub.url) === normalizedActivePath)
+    );
+    if (activeMenu) {
+      setOpenModuleId(activeMenu.moduleId);
+    }
+  }, [activePath, menus]);
+
   return (
     <aside className={`layout-sidebar ${isMobileOpen ? 'open' : ''}`}>
       <div className="sidebar-brand-wrapper">
@@ -344,7 +354,14 @@ const Sidebar = ({ menus = [], isMobileOpen, onCloseMobile }) => {
           </div>
         ) : (
           displayedMenus.sort((a, b) => a.displayOrder - b.displayOrder).map(menu => (
-            <MenuItem key={menu.moduleId} menu={menu} activePath={activePath} onCloseMobile={onCloseMobile} />
+            <MenuItem 
+              key={menu.moduleId} 
+              menu={menu} 
+              activePath={activePath} 
+              onCloseMobile={onCloseMobile} 
+              isOpen={openModuleId === menu.moduleId}
+              onToggle={() => setOpenModuleId(openModuleId === menu.moduleId ? null : menu.moduleId)}
+            />
           ))
         )}
       </nav>

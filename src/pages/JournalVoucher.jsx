@@ -289,7 +289,7 @@ const JournalVoucher = () => {
     }
 
     const { totalDr, totalCr } = calculateTotals();
-    if (Math.abs(totalDr - totalCr) > 0.001) {
+    if (statusId === 2 && Math.abs(totalDr - totalCr) > 0.001) {
       toast.error(`Voucher is not balanced! Debit: ₹${totalDr.toFixed(2)}, Credit: ₹${totalCr.toFixed(2)}`);
       return;
     }
@@ -312,7 +312,7 @@ const JournalVoucher = () => {
         voucherConfigId: journalVoucherConfigId,
         voucherNo: voucherData.voucherNo,
         voucherDate: new Date(voucherData.voucherDate).toISOString(),
-        totalDebitAmount: totalDr,
+        totalAmount: totalDr,
         narration: voucherData.narration,
         voucherStatus: statusId,
         ledgerEntries: ledgerEntries
