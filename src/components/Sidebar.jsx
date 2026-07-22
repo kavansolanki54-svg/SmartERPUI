@@ -53,7 +53,15 @@ const MenuItem = ({ menu, activePath, onCloseMobile, isOpen, onToggle }) => {
             <i className={getIconClass(menu.icon)} style={{ width: '16px', textAlign: 'center', fontSize: '14px', color: isActive ? 'rgba(255,255,255,0.9)' : 'inherit' }}></i>
             <span className="sidebar-link-text">{menu.name}</span>
           </div>
-          <i className={`fa-solid fa-chevron-${isOpen ? 'up' : 'down'} sidebar-chevron`} style={{ fontSize: '10px', opacity: isActive ? 0.9 : 0.5 }}></i>
+          <i 
+            className="fa-solid fa-chevron-down sidebar-chevron" 
+            style={{ 
+              fontSize: '10px', 
+              opacity: isActive ? 0.9 : 0.5,
+              transform: isOpen ? 'rotate(180deg)' : 'rotate(0deg)',
+              transition: 'transform 0.3s cubic-bezier(0.4, 0, 0.2, 1)'
+            }}
+          ></i>
         </div>
       ) : (
         <Link
@@ -86,36 +94,56 @@ const MenuItem = ({ menu, activePath, onCloseMobile, isOpen, onToggle }) => {
         </Link>
       )}
 
-      {hasSubMenus && isOpen && (
-        <div className="sidebar-submenu-wrapper" style={{ paddingLeft: '34px', marginTop: '4px', display: 'flex', flexDirection: 'column', gap: '4px' }}>
-          {menu.subMenus.map(subMenu => (
-            <div
-              key={subMenu.moduleId}
-              onClick={() => {
-                navigate(subMenu.url ? (subMenu.url.startsWith('/') ? subMenu.url : `/${subMenu.url}`) : '#');
-                if (onCloseMobile) onCloseMobile();
-              }}
-              style={{
-                display: 'block',
-                padding: '8px 12px',
-                borderRadius: '6px',
-                backgroundColor: normalizedActivePath === normalize(subMenu.url) ? 'rgba(0, 63, 177, 0.08)' : 'transparent',
-                color: normalizedActivePath === normalize(subMenu.url) ? 'var(--color-primary)' : 'var(--color-on-surface-variant)',
-                cursor: 'pointer',
-                fontSize: '13px',
-                fontWeight: normalizedActivePath === normalize(subMenu.url) ? '600' : '400',
-                transition: 'all 0.2s'
-              }}
-              onMouseEnter={(e) => {
-                if (normalizedActivePath !== normalize(subMenu.url)) e.currentTarget.style.color = 'var(--color-on-surface)';
-              }}
-              onMouseLeave={(e) => {
-                if (normalizedActivePath !== normalize(subMenu.url)) e.currentTarget.style.color = 'var(--color-on-surface-variant)';
-              }}
-            >
-              {subMenu.name}
+      {hasSubMenus && (
+        <div 
+          className="sidebar-submenu-accordion" 
+          style={{ 
+            display: 'grid',
+            gridTemplateRows: isOpen ? '1fr' : '0fr',
+            opacity: isOpen ? 1 : 0,
+            transform: isOpen ? 'translateY(0)' : 'translateY(-6px)',
+            transition: 'grid-template-rows 0.35s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.28s cubic-bezier(0.4, 0, 0.2, 1), transform 0.28s cubic-bezier(0.4, 0, 0.2, 1)',
+            overflow: 'hidden'
+          }}
+        >
+          <div style={{ minHeight: 0 }}>
+            <div className="sidebar-submenu-wrapper" style={{ paddingLeft: '34px', paddingTop: '4px', paddingBottom: '4px', display: 'flex', flexDirection: 'column', gap: '4px' }}>
+              {menu.subMenus.map(subMenu => (
+                <div
+                  key={subMenu.moduleId}
+                  onClick={() => {
+                    navigate(subMenu.url ? (subMenu.url.startsWith('/') ? subMenu.url : `/${subMenu.url}`) : '#');
+                    if (onCloseMobile) onCloseMobile();
+                  }}
+                  style={{
+                    display: 'block',
+                    padding: '8px 12px',
+                    borderRadius: '6px',
+                    backgroundColor: normalizedActivePath === normalize(subMenu.url) ? 'rgba(0, 63, 177, 0.08)' : 'transparent',
+                    color: normalizedActivePath === normalize(subMenu.url) ? 'var(--color-primary)' : 'var(--color-on-surface-variant)',
+                    cursor: 'pointer',
+                    fontSize: '13px',
+                    fontWeight: normalizedActivePath === normalize(subMenu.url) ? '600' : '400',
+                    transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)'
+                  }}
+                  onMouseEnter={(e) => {
+                    if (normalizedActivePath !== normalize(subMenu.url)) {
+                      e.currentTarget.style.color = 'var(--color-on-surface)';
+                      e.currentTarget.style.backgroundColor = 'var(--color-surface-container-low)';
+                    }
+                  }}
+                  onMouseLeave={(e) => {
+                    if (normalizedActivePath !== normalize(subMenu.url)) {
+                      e.currentTarget.style.color = 'var(--color-on-surface-variant)';
+                      e.currentTarget.style.backgroundColor = 'transparent';
+                    }
+                  }}
+                >
+                  {subMenu.name}
+                </div>
+              ))}
             </div>
-          ))}
+          </div>
         </div>
       )}
     </div>
