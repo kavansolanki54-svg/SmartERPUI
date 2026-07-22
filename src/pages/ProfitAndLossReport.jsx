@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { getProfitAndLoss, getGroupDetails, getLedgerSummary, getVoucherRegister } from '../services/api';
+import { getProfitAndLoss, getGroupDetails, getLedgerMonthlySummary, getVoucherRegister } from '../services/api';
 import toast from 'react-hot-toast';
+import { BarChart, Bar, XAxis, Tooltip, ResponsiveContainer } from 'recharts';
 
 const ProfitAndLossReport = () => {
   const today = new Date();
@@ -48,6 +49,9 @@ const ProfitAndLossReport = () => {
   const [level, setLevel] = useState(1);
   const [currentGroupId, setCurrentGroupId] = useState(null);
   const [currentLedgerId, setCurrentLedgerId] = useState(null);
+  const [selectedMonth, setSelectedMonth] = useState(null);
+  const [voucherStartDate, setVoucherStartDate] = useState('');
+  const [voucherEndDate, setVoucherEndDate] = useState('');
 
   // Data states
   const [plData, setPlData] = useState(null);
@@ -94,36 +98,36 @@ const ProfitAndLossReport = () => {
           toast.error(response.message || "Failed to load Group Details");
         }
       } else if (level === 3) {
-        const response = await getLedgerSummary(currentLedgerId, startDate, endDate);
+        const response = await getLedgerMonthlySummary(currentLedgerId, startDate, endDate);
         if (response.success && response.data) {
           setLedgerData(response.data);
-          const apiBreadcrumbs = response.data.breadcrumbs.map(b => ({
+          const apiBreadcrumbs = response.data.breadcrumbs ? response.data.breadcrumbs.map(b => ({
             name: b.groupName,
             level: 2,
             id: b.groupId
-          }));
+          })) : [];
           setBreadcrumbs([
             { name: 'Profit & Loss', level: 1 },
             ...apiBreadcrumbs,
             { name: response.data.ledgerName, level: 3, id: response.data.ledgerId }
           ]);
         } else {
-          toast.error(response.message || "Failed to load Ledger Summary");
+          toast.error(response.message || "Failed to load Ledger Monthly Summary");
         }
       } else if (level === 4) {
-        const response = await getVoucherRegister(currentLedgerId, startDate, endDate, null, null, searchQuery);
+        const response = await getVoucherRegister(currentLedgerId, voucherStartDate || startDate, voucherEndDate || endDate, null, null, searchQuery);
         if (response.success && response.data) {
           setVoucherData(response.data);
-          const apiBreadcrumbs = response.data.breadcrumbs.map(b => ({
+          const apiBreadcrumbs = response.data.breadcrumbs ? response.data.breadcrumbs.map(b => ({
             name: b.groupName,
             level: 2,
             id: b.groupId
-          }));
+          })) : [];
           setBreadcrumbs([
             { name: 'Profit & Loss', level: 1 },
             ...apiBreadcrumbs,
             { name: response.data.ledgerName, level: 3, id: currentLedgerId },
-            { name: 'Voucher Register', level: 4 }
+            { name: selectedMonth ? `${selectedMonth.monthName} Vouchers` : 'Voucher Register', level: 4 }
           ]);
         } else {
           toast.error(response.message || "Failed to load Voucher Register");
@@ -139,7 +143,7 @@ const ProfitAndLossReport = () => {
 
   useEffect(() => {
     loadData();
-  }, [level, currentGroupId, currentLedgerId, startDate, endDate, searchQuery]);
+  }, [level, currentGroupId, currentLedgerId, startDate, endDate, voucherStartDate, voucherEndDate, searchQuery]);
 
   const handleGroupClick = (groupId) => {
     if (!groupId) return;
@@ -150,10 +154,26 @@ const ProfitAndLossReport = () => {
   const handleLedgerClick = (ledgerId) => {
     if (!ledgerId) return;
     setCurrentLedgerId(ledgerId);
+    setSelectedMonth(null);
+    setVoucherStartDate('');
+    setVoucherEndDate('');
     setLevel(3);
   };
 
+  const handleMonthClick = (m) => {
+    const pad = (n) => String(n).padStart(2, '0');
+    const startStr = `${m.year}-${pad(m.monthNumber)}-01`;
+    const lastDay = new Date(m.year, m.monthNumber, 0).getDate();
+    const endStr = `${m.year}-${pad(m.monthNumber)}-${pad(lastDay)}`;
+    
+    setSelectedMonth(m);
+    setVoucherStartDate(startStr);
+    setVoucherEndDate(endStr);
+    setLevel(4);
+  };
+
   const handleBreadcrumbClick = (bc) => {
+    setSearchQuery('');
     if (bc.level === 1) {
       setLevel(1);
       setBreadcrumbs([{ name: 'Profit & Loss', level: 1 }]);
@@ -162,8 +182,21 @@ const ProfitAndLossReport = () => {
       setLevel(2);
     } else if (bc.level === 3) {
       setCurrentLedgerId(bc.id);
+      setSelectedMonth(null);
+      setVoucherStartDate('');
+      setVoucherEndDate('');
       setLevel(3);
     }
+  };
+
+  const formatTallyDate = (dateStr) => {
+    if (!dateStr) return '';
+    const date = new Date(dateStr);
+    if (isNaN(date.getTime())) return dateStr;
+    const day = date.getDate();
+    const month = date.toLocaleString('en-US', { month: 'short' });
+    const year = String(date.getFullYear()).substring(2);
+    return `${day}-${month}-${year}`;
   };
 
   const handlePrint = () => {
@@ -207,15 +240,15 @@ const ProfitAndLossReport = () => {
         csvContent += `"${l.ledgerName}","${l.amount}"\n`;
       });
     } else if (level === 3 && ledgerData) {
-      csvContent += `"${ledgerData.ledgerName} - Summary"\n`;
-      csvContent += `"Opening Balance","${ledgerData.openingBalance}"\n`;
-      csvContent += `"Period Debit","${ledgerData.periodDebit}"\n`;
-      csvContent += `"Period Credit","${ledgerData.periodCredit}"\n`;
-      csvContent += `"Closing Balance","${ledgerData.closingBalance}"\n`;
+      csvContent += `"${ledgerData.ledgerName} Monthly Summary"\n`;
+      csvContent += `"Month","Debit Transactions","Credit Transactions","Closing Balance"\n`;
+      ledgerData.months.forEach(m => {
+        csvContent += `"${m.monthName}","${m.debit}","${m.credit}","${m.closingBalance} ${m.balanceType}"\n`;
+      });
     } else if (level === 4 && voucherData) {
-      csvContent += `"Date","Voucher No.","Voucher Type","Particulars","Debit","Credit","Running Balance"\n`;
+      csvContent += `"Date","Particulars","Voucher Type","Voucher No.","Debit","Credit","Running Balance"\n`;
       voucherData.vouchers.forEach(v => {
-        csvContent += `"${v.date.split('T')[0]}","${v.voucherNo}","${v.voucherType}","${v.particulars}","${v.debit}","${v.credit}","${v.runningBalance}"\n`;
+        csvContent += `"${v.date ? v.date.split('T')[0] : ''}","${v.particulars}","${v.voucherType}","${v.voucherNo}","${v.debit}","${v.credit}","${v.runningBalance}"\n`;
       });
     }
 
@@ -432,6 +465,29 @@ const ProfitAndLossReport = () => {
         display: 'flex',
         flexDirection: 'column'
       }}>
+
+        {/* Top Banner */}
+        <div style={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          backgroundColor: 'var(--color-surface-container)',
+          padding: '12px 20px',
+          borderBottom: '1px solid var(--color-border-structural)',
+          fontSize: '13px',
+          fontWeight: '700',
+          color: 'var(--color-on-surface)'
+        }}>
+          <div>
+            {level === 1 ? 'Profit & Loss Statement' : level === 2 ? 'Group Details' : level === 3 ? 'Monthly Summary' : 'Ledger Vouchers'}
+          </div>
+          <div>
+            {level === 1 ? (plData?.companyName || 'SmartERP') : 
+             level === 2 ? (groupData?.companyName || 'SmartERP') : 
+             level === 3 ? `${ledgerData?.ledgerName} (${ledgerData?.companyName || ''})` : 
+             `${voucherData?.ledgerName || ''} (${voucherData?.companyName || ''})`}
+          </div>
+        </div>
 
         {loading && (
           <div style={{ padding: '60px 20px', textAlign: 'center', color: 'var(--color-on-surface-variant)', fontSize: '14px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '12px' }}>
@@ -992,119 +1048,161 @@ const ProfitAndLossReport = () => {
               </div>
             )}
 
-            {/* LEVEL 3: Ledger Summary */}
+            {/* LEVEL 3: Monthly Summary */}
             {level === 3 && ledgerData && (
               <div>
-                <div style={{ display: 'flex', borderBottom: '1px solid var(--color-border-structural)', backgroundColor: 'var(--color-surface-container)', fontWeight: '700', fontSize: '13px', color: 'var(--color-on-surface)' }}>
-                  <span style={{ flexGrow: 1, padding: '12px 20px' }}>Ledger Account Summary</span>
-                  <span style={{ width: '250px', textAlign: 'right', padding: '12px 20px' }}>Value</span>
-                </div>
+                <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px', color: 'var(--color-on-surface)' }}>
+                  <thead>
+                    <tr style={{ borderBottom: '1px solid var(--color-border-structural)' }}>
+                      <th style={{ textAlign: 'left', padding: '12px 20px', fontWeight: '700' }}>Particulars</th>
+                      <th colSpan="2" style={{ textAlign: 'center', padding: '12px 20px', borderBottom: '1.5px solid var(--color-border-structural)' }}>
+                        Transactions
+                      </th>
+                      <th style={{ width: '220px', textAlign: 'right', padding: '12px 20px', fontWeight: '700', borderBottom: '1.5px solid var(--color-border-structural)' }}>
+                        <div style={{ fontSize: '11px', fontWeight: '500', color: 'var(--color-on-surface-variant)', marginBottom: '2px' }}>
+                          {ledgerData.ledgerName}<br/>
+                          {ledgerData.companyName}<br/>
+                          {formatTallyDate(startDate)} to {formatTallyDate(endDate)}
+                        </div>
+                        Closing Balance
+                      </th>
+                    </tr>
+                    <tr style={{ borderBottom: '1px solid var(--color-border-structural)', backgroundColor: 'var(--color-surface-container-low)' }}>
+                      <th></th>
+                      <th style={{ width: '180px', textAlign: 'right', padding: '8px 20px', fontWeight: '700', borderLeft: '1px solid var(--color-border-structural)' }}>Debit</th>
+                      <th style={{ width: '180px', textAlign: 'right', padding: '8px 20px', fontWeight: '700', borderLeft: '1px solid var(--color-border-structural)' }}>Credit</th>
+                      <th style={{ borderLeft: '1px solid var(--color-border-structural)' }}></th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr style={{ fontWeight: '600', backgroundColor: 'var(--color-surface-container-lowest)', borderBottom: '1px solid var(--color-border-structural)' }}>
+                      <td style={{ padding: '10px 20px', fontStyle: 'italic' }}>Opening Balance</td>
+                      <td style={{ borderLeft: '1px solid var(--color-border-structural)' }}></td>
+                      <td style={{ borderLeft: '1px solid var(--color-border-structural)' }}></td>
+                      <td style={{ textAlign: 'right', padding: '10px 20px', borderLeft: '1px solid var(--color-border-structural)', fontWeight: '700' }}>
+                        {formatCurrency(ledgerData.openingBalance)} {ledgerData.openingBalanceType}
+                      </td>
+                    </tr>
+                    {ledgerData.months && ledgerData.months.map((m, idx) => (
+                      <tr key={`m-${idx}`} style={{ borderBottom: '1px solid var(--color-border-structural)' }} onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'var(--color-surface-container-low)'} onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}>
+                        <td style={{ padding: '10px 20px', cursor: 'pointer', color: 'var(--color-primary)', fontWeight: '600' }} onClick={() => handleMonthClick(m)}>
+                          {m.monthName}
+                        </td>
+                        <td style={{ textAlign: 'right', padding: '10px 20px', borderLeft: '1px solid var(--color-border-structural)', color: '#16a34a', fontWeight: '500' }}>{formatCurrency(m.debit, true)}</td>
+                        <td style={{ textAlign: 'right', padding: '10px 20px', borderLeft: '1px solid var(--color-border-structural)', color: '#dc2626', fontWeight: '500' }}>{formatCurrency(m.credit, true)}</td>
+                        <td style={{ textAlign: 'right', padding: '10px 20px', borderLeft: '1px solid var(--color-border-structural)', fontWeight: '700' }}>
+                          {formatCurrency(m.closingBalance)} {m.balanceType}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                  <tfoot>
+                    <tr style={{ borderTop: '2px solid var(--color-border-structural)', borderBottom: '2.5px solid var(--color-border-structural)', fontWeight: '700', backgroundColor: 'var(--color-surface-container-low)' }}>
+                      <td style={{ padding: '12px 20px' }}>Grand Total</td>
+                      <td style={{ textAlign: 'right', padding: '12px 20px', borderLeft: '1px solid var(--color-border-structural)', color: '#16a34a' }}>{formatCurrency(ledgerData.totalDebit)}</td>
+                      <td style={{ textAlign: 'right', padding: '12px 20px', borderLeft: '1px solid var(--color-border-structural)', color: '#dc2626' }}>{formatCurrency(ledgerData.totalCredit)}</td>
+                      <td style={{ textAlign: 'right', padding: '12px 20px', borderLeft: '1px solid var(--color-border-structural)' }}>{formatCurrency(ledgerData.closingBalance)} {ledgerData.closingBalanceType}</td>
+                    </tr>
+                  </tfoot>
+                </table>
 
-                <div style={{ minHeight: '350px', padding: '24px 32px', fontSize: '14px', maxWidth: '640px', margin: '0 auto', display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                  <div style={{ borderBottom: '1px solid var(--color-border-structural)', paddingBottom: '12px', marginBottom: '8px' }}>
-                    <span style={{ fontSize: '18px', fontWeight: '700', color: 'var(--color-on-surface)' }}>{ledgerData.ledgerName}</span>
-                  </div>
-
-                  <div style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 0', borderBottom: '1px dashed var(--color-border-structural)' }}>
-                    <span style={{ color: 'var(--color-on-surface-variant)' }}>Opening Balance</span>
-                    <span style={{ fontWeight: '700' }}>{formatCurrency(ledgerData.openingBalance)} {ledgerData.balanceType}</span>
-                  </div>
-
-                  <div style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 0', borderBottom: '1px dashed var(--color-border-structural)' }}>
-                    <span style={{ color: 'var(--color-on-surface-variant)' }}>Total Debit Transactions</span>
-                    <span style={{ fontWeight: '700', color: '#16a34a' }}>{formatCurrency(ledgerData.periodDebit)}</span>
-                  </div>
-
-                  <div style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 0', borderBottom: '1px dashed var(--color-border-structural)' }}>
-                    <span style={{ color: 'var(--color-on-surface-variant)' }}>Total Credit Transactions</span>
-                    <span style={{ fontWeight: '700', color: '#dc2626' }}>{formatCurrency(ledgerData.periodCredit)}</span>
-                  </div>
-
-                  <div style={{ display: 'flex', justifyContent: 'space-between', padding: '12px 0', borderBottom: '2px solid var(--color-border-structural)', fontSize: '15px', fontWeight: '700' }}>
-                    <span>Closing Balance</span>
-                    <span>{formatCurrency(ledgerData.closingBalance)} {ledgerData.balanceType}</span>
-                  </div>
-
-                  <div style={{ marginTop: '24px', display: 'flex', justifyContent: 'center' }}>
-                    <button
-                      onClick={() => setLevel(4)}
-                      style={{
-                        padding: '10px 24px',
-                        backgroundColor: 'var(--color-primary)',
-                        color: 'var(--color-on-primary)',
-                        border: 'none',
-                        borderRadius: 'var(--radius-md)',
-                        cursor: 'pointer',
-                        fontWeight: '600',
-                        fontSize: '13px',
-                        boxShadow: '0 2px 4px rgba(0,0,0,0.08)'
-                      }}
-                    >
-                      <i className="fa-solid fa-list-check" style={{ marginRight: '8px' }}></i> View Voucher Details
-                    </button>
+                {/* Recharts Bar Chart Section */}
+                <div style={{ padding: '24px', backgroundColor: 'var(--color-level-1)', borderTop: '1px solid var(--color-border-structural)', marginTop: '20px' }}>
+                  <h3 style={{ fontSize: '14px', fontWeight: '700', color: 'var(--color-on-surface)', marginBottom: '16px', textAlign: 'center' }}>
+                    Monthly Transaction Trends
+                  </h3>
+                  <div style={{ width: '100%', height: 250 }}>
+                    <ResponsiveContainer width="100%" height="100%">
+                      <BarChart data={ledgerData.months} margin={{ top: 10, right: 30, left: 20, bottom: 5 }}>
+                        <XAxis dataKey="monthName" stroke="var(--color-on-surface-variant)" fontSize={11} />
+                        <Tooltip formatter={(value) => formatCurrency(value)} />
+                        <Bar dataKey="debit" fill="#16a34a" radius={[4, 4, 0, 0]} name="Debit Transactions" />
+                        <Bar dataKey="credit" fill="#dc2626" radius={[4, 4, 0, 0]} name="Credit Transactions" />
+                      </BarChart>
+                    </ResponsiveContainer>
                   </div>
                 </div>
               </div>
             )}
 
-            {/* LEVEL 4: Voucher Details / Register */}
+            {/* LEVEL 4: Ledger Vouchers */}
             {level === 4 && voucherData && (
-              <div style={{ border: '1px solid var(--color-border-structural)', borderRadius: 'var(--radius-lg)' }}>
-                {/* Table Header */}
-                <div style={{ display: 'flex', borderBottom: '1px solid var(--color-border-structural)', backgroundColor: 'var(--color-surface-container)', fontWeight: '700', fontSize: '12px', color: 'var(--color-on-surface)' }}>
-                  <span style={{ width: '100px', padding: '12px 16px' }}>Date</span>
-                  <span style={{ width: '120px', padding: '12px 16px' }}>Voucher No.</span>
-                  <span style={{ width: '120px', padding: '12px 16px' }}>Voucher Type</span>
-                  <span style={{ flexGrow: 1, padding: '12px 16px' }}>Particulars</span>
-                  <span style={{ width: '130px', textAlign: 'right', padding: '12px 16px' }}>Debit</span>
-                  <span style={{ width: '130px', textAlign: 'right', padding: '12px 16px' }}>Credit</span>
-                  <span style={{ width: '150px', textAlign: 'right', padding: '12px 16px' }}>Running Balance</span>
-                </div>
+              <div style={{ border: '1px solid var(--color-border-structural)', borderRadius: 'var(--radius-lg)', position: 'relative' }}>
+                <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px', color: 'var(--color-on-surface)' }}>
+                  <thead>
+                    <tr style={{ borderBottom: '1.5px solid var(--color-border-structural)', backgroundColor: 'var(--color-surface-container-low)' }}>
+                      <th style={{ textAlign: 'left', padding: '12px 16px', fontWeight: '700' }}>Date</th>
+                      <th style={{ textAlign: 'left', padding: '12px 16px', fontWeight: '700' }}>Particulars</th>
+                      <th style={{ textAlign: 'left', padding: '12px 16px', fontWeight: '700' }}>Vch Type</th>
+                      <th style={{ textAlign: 'left', padding: '12px 16px', fontWeight: '700' }}>Vch No.</th>
+                      <th style={{ width: '150px', textAlign: 'right', padding: '12px 16px', fontWeight: '700', borderLeft: '1px solid var(--color-border-structural)' }}>Debit</th>
+                      <th style={{ width: '150px', textAlign: 'right', padding: '12px 16px', fontWeight: '700', borderLeft: '1px solid var(--color-border-structural)' }}>Credit</th>
+                      <th style={{ width: '180px', textAlign: 'right', padding: '12px 16px', fontWeight: '700', borderLeft: '1px solid var(--color-border-structural)', borderBottom: '1.5px solid var(--color-border-structural)' }}>
+                        <div style={{ fontSize: '11px', fontWeight: '500', color: 'var(--color-on-surface-variant)', marginBottom: '2px' }}>
+                          {voucherData.companyName}<br/>
+                          {formatTallyDate(voucherStartDate || startDate)} to {formatTallyDate(voucherEndDate || endDate)}
+                        </div>
+                        Closing Balance
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {/* Opening Balance Line */}
+                    <tr style={{ borderBottom: '1px solid var(--color-border-structural)', fontWeight: '600', backgroundColor: 'var(--color-surface-container-lowest)' }}>
+                      <td style={{ padding: '10px 16px' }}></td>
+                      <td style={{ padding: '10px 16px', fontStyle: 'italic' }}>Opening Balance</td>
+                      <td></td>
+                      <td></td>
+                      <td style={{ borderLeft: '1px solid var(--color-border-structural)' }}></td>
+                      <td style={{ borderLeft: '1px solid var(--color-border-structural)' }}></td>
+                      <td style={{ textAlign: 'right', padding: '10px 16px', borderLeft: '1px solid var(--color-border-structural)', fontWeight: '700' }}>
+                        {formatCurrency(voucherData.openingBalance)} {voucherData.openingBalanceType}
+                      </td>
+                    </tr>
+                    
+                    {voucherData.vouchers.map((v, idx) => (
+                      <tr key={`v-${idx}`} style={{ borderBottom: '1px solid var(--color-border-structural)' }} onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'var(--color-surface-container-low)'} onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}>
+                        <td style={{ padding: '10px 16px' }}>{v.date ? v.date.split('T')[0] : ''}</td>
+                        <td style={{ padding: '10px 16px', fontStyle: 'italic', fontWeight: '500' }}>{v.particulars}</td>
+                        <td style={{ padding: '10px 16px' }}>{v.voucherType}</td>
+                        <td style={{ padding: '10px 16px' }}>{v.voucherNo}</td>
+                        <td style={{ textAlign: 'right', padding: '10px 16px', borderLeft: '1px solid var(--color-border-structural)', color: '#16a34a', fontWeight: '600' }}>{v.debit > 0 ? formatCurrency(v.debit) : ''}</td>
+                        <td style={{ textAlign: 'right', padding: '10px 16px', borderLeft: '1px solid var(--color-border-structural)', color: '#dc2626', fontWeight: '600' }}>{v.credit > 0 ? formatCurrency(v.credit) : ''}</td>
+                        <td style={{ textAlign: 'right', padding: '10px 16px', borderLeft: '1px solid var(--color-border-structural)', fontWeight: '700' }}>{formatCurrency(v.runningBalance)}</td>
+                      </tr>
+                    ))}
 
-                {/* Table Content */}
-                <div style={{ minHeight: '380px', fontSize: '13px' }}>
-                  {/* Opening Balance Row */}
-                  <div style={{ display: 'flex', padding: '10px 16px', borderBottom: '1px dashed var(--color-border-structural)', backgroundColor: 'var(--color-level-0)', fontStyle: 'italic', fontWeight: '700', color: 'var(--color-on-surface-variant)' }}>
-                    <span style={{ width: '100px' }}></span>
-                    <span style={{ width: '120px' }}></span>
-                    <span style={{ width: '120px' }}></span>
-                    <span style={{ flexGrow: 1 }}>Opening Balance</span>
-                    <span style={{ width: '130px' }}></span>
-                    <span style={{ width: '130px' }}></span>
-                    <span style={{ width: '150px', textAlign: 'right' }}>{formatCurrency(voucherData.openingBalance)}</span>
-                  </div>
-
-                  {/* Vouchers list */}
-                  {voucherData.vouchers.map((v, idx) => (
-                    <div
-                      key={idx}
-                      style={{ display: 'flex', padding: '10px 16px', borderBottom: '1px solid var(--color-border-structural)' }}
-                    >
-                      <span style={{ width: '100px' }}>{v.date.split('T')[0]}</span>
-                      <span style={{ width: '120px' }}>{v.voucherNo}</span>
-                      <span style={{ width: '120px' }}>{v.voucherType}</span>
-                      <span style={{ flexGrow: 1 }}>{v.particulars}</span>
-                      <span style={{ width: '130px', textAlign: 'right', color: '#16a34a', fontWeight: '600' }}>{v.debit > 0 ? formatCurrency(v.debit) : ''}</span>
-                      <span style={{ width: '130px', textAlign: 'right', color: '#dc2626', fontWeight: '600' }}>{v.credit > 0 ? formatCurrency(v.credit) : ''}</span>
-                      <span style={{ width: '150px', textAlign: 'right', fontWeight: '700' }}>{formatCurrency(v.runningBalance)}</span>
-                    </div>
-                  ))}
-
-                  {voucherData.vouchers.length === 0 && (
-                    <div style={{ padding: '60px 20px', textAlign: 'center', color: 'var(--color-outline)' }}>No voucher transaction records found matching the filters.</div>
-                  )}
-                </div>
-
-                {/* Voucher Register Summary Row */}
-                <div style={{ display: 'flex', padding: '14px 16px', backgroundColor: 'var(--color-level-0)', borderTop: '2px solid var(--color-border-structural)', fontWeight: '700', fontSize: '13px' }}>
-                  <span style={{ width: '100px' }}></span>
-                  <span style={{ width: '120px' }}></span>
-                  <span style={{ width: '120px' }}></span>
-                  <span style={{ flexGrow: 1 }}>Total Transactions</span>
-                  <span style={{ width: '130px', textAlign: 'right', color: '#16a34a' }}>{formatCurrency(voucherData.totalDebit)}</span>
-                  <span style={{ width: '130px', textAlign: 'right', color: '#dc2626' }}>{formatCurrency(voucherData.totalCredit)}</span>
-                  <span style={{ width: '150px', textAlign: 'right' }}>{formatCurrency(voucherData.closingBalance)}</span>
-                </div>
+                    {voucherData.vouchers.length === 0 && (
+                      <tr>
+                        <td colSpan="7" style={{ padding: '60px 20px', textAlign: 'center', color: 'var(--color-outline)' }}>No voucher transaction records found matching the filters.</td>
+                      </tr>
+                    )}
+                  </tbody>
+                  <tfoot>
+                    <tr style={{ borderTop: '2px solid var(--color-border-structural)', fontWeight: '700' }}>
+                      <td colSpan="4" style={{ padding: '10px 16px', textAlign: 'right' }}>Opening Balance:</td>
+                      <td style={{ borderLeft: '1px solid var(--color-border-structural)' }}></td>
+                      <td style={{ borderLeft: '1px solid var(--color-border-structural)' }}></td>
+                      <td style={{ textAlign: 'right', padding: '10px 16px', borderLeft: '1px solid var(--color-border-structural)' }}>
+                        {formatCurrency(voucherData.openingBalance)} {voucherData.openingBalanceType}
+                      </td>
+                    </tr>
+                    <tr style={{ fontWeight: '700' }}>
+                      <td colSpan="4" style={{ padding: '10px 16px', textAlign: 'right' }}>Current Total:</td>
+                      <td style={{ textAlign: 'right', padding: '10px 16px', borderLeft: '1px solid var(--color-border-structural)', color: '#16a34a' }}>{formatCurrency(voucherData.totalDebit)}</td>
+                      <td style={{ textAlign: 'right', padding: '10px 16px', borderLeft: '1px solid var(--color-border-structural)', color: '#dc2626' }}>{formatCurrency(voucherData.totalCredit)}</td>
+                      <td style={{ borderLeft: '1px solid var(--color-border-structural)' }}></td>
+                    </tr>
+                    <tr style={{ borderBottom: '2.5px solid var(--color-border-structural)', fontWeight: '700', backgroundColor: 'var(--color-surface-container-low)' }}>
+                      <td colSpan="4" style={{ padding: '12px 16px', textAlign: 'right' }}>Closing Balance:</td>
+                      <td style={{ borderLeft: '1px solid var(--color-border-structural)' }}></td>
+                      <td style={{ borderLeft: '1px solid var(--color-border-structural)' }}></td>
+                      <td style={{ textAlign: 'right', padding: '12px 16px', borderLeft: '1px solid var(--color-border-structural)' }}>
+                        {formatCurrency(voucherData.closingBalance)} {voucherData.closingBalanceType}
+                      </td>
+                    </tr>
+                  </tfoot>
+                </table>
               </div>
             )}
           </div>
