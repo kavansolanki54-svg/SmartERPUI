@@ -1,38 +1,30 @@
+import axiosInstance from './axiosInstance';
+
 export const API_URL = import.meta.env.VITE_API_URL || 'https://localhost:7290';
 
 const request = async (endpoint, method, body = null) => {
-  const headers = {
-    'Content-Type': 'application/json',
-  };
-
-  const token = localStorage.getItem('token');
-  if (token) {
-    headers['Authorization'] = `Bearer ${token}`;
-  }
-
   const options = {
     method,
-    headers: {
-      ...headers,
-    },
+    url: endpoint.startsWith('/') ? endpoint : `/${endpoint}`,
   };
 
   if (body) {
+    options.data = body;
     if (body instanceof FormData) {
-      options.body = body;
-      delete options.headers['Content-Type'];
-    } else {
-      options.headers['Content-Type'] = 'application/json';
-      options.body = JSON.stringify(body);
+      options.headers = {
+        'Content-Type': 'multipart/form-data',
+      };
     }
   }
 
   try {
-    const response = await fetch(`${API_URL}/api/${endpoint}`, options);
-    const data = await response.json();
-    return data;
+    const response = await axiosInstance(options);
+    return response.data;
   } catch (error) {
     console.error('API Request failed:', error);
+    if (error.response && error.response.data) {
+      return error.response.data;
+    }
     throw error;
   }
 };
@@ -43,6 +35,18 @@ export const login = async (email, password) => {
 
 export const signup = async (companyName, fullName, email, password, confirmPassword) => {
   return await request('Auth/SignUp', 'POST', { companyName, fullName, email, password, confirmPassword });
+};
+
+export const requestForgotPasswordCode = async (email) => {
+  return await request('Auth/forgot-password/request', 'POST', { email });
+};
+
+export const verifyForgotPasswordOtp = async (email, otpCode) => {
+  return await request('Auth/forgot-password/verify-otp', 'POST', { email, otpCode });
+};
+
+export const resetForgotPassword = async (email, newPassword, confirmPassword) => {
+  return await request('Auth/forgot-password/reset', 'POST', { email, newPassword, confirmPassword });
 };
 
 export const getMenus = async (roleId, isTenant) => {

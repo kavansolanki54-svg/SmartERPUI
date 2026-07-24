@@ -1,6 +1,6 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Toaster } from 'react-hot-toast';
-import { BrowserRouter, Routes, Route, Navigate, Outlet } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate, Outlet, useNavigate } from 'react-router-dom';
 import Dashboard from './pages/Dashboard';
 import Login from './pages/Login';
 import SignUp from './pages/SignUp';
@@ -36,15 +36,29 @@ import JournalVoucherList from './pages/JournalVoucherList';
 import JournalVoucher from './pages/JournalVoucher';
 import ProfitAndLossReport from './pages/ProfitAndLossReport';
 import CashBankSummaryReport from './pages/CashBankSummaryReport';
+import SessionExpired from './pages/SessionExpired';
+import ForgotPassword from './pages/ForgotPassword';
 
 import Layout from './components/Layout';
+import { AuthProvider, useAuth } from './context/AuthContext';
+import { setAccessTokenTracker } from './services/axiosInstance';
 
 // Persistent protected layout wrapper
 const ProtectedLayout = () => {
-  const token = localStorage.getItem('token');
+  const { token, loading } = useAuth();
+
+  if (loading) {
+    return (
+      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh', backgroundColor: 'var(--color-surface)' }}>
+        <div style={{ color: 'var(--color-primary)', fontWeight: '600' }}>Loading Session...</div>
+      </div>
+    );
+  }
+
   if (!token) {
     return <Navigate to="/login" replace />;
   }
+
   return (
     <Layout>
       <Outlet />
@@ -52,13 +66,36 @@ const ProtectedLayout = () => {
   );
 };
 
-function App() {
+function AppContent() {
+  const { token, handleLogoutCleanState } = useAuth();
+  const navigate = useNavigate();
+
+  // Set the access token retrieval method for our axios interceptor
+  useEffect(() => {
+    setAccessTokenTracker(() => token);
+  }, [token]);
+
+  // Listen for the global session expired event to clear state and redirect
+  useEffect(() => {
+    const handleSessionExpired = () => {
+      handleLogoutCleanState();
+      navigate('/session-expired');
+    };
+
+    window.addEventListener('session-expired', handleSessionExpired);
+    return () => {
+      window.removeEventListener('session-expired', handleSessionExpired);
+    };
+  }, [handleLogoutCleanState, navigate]);
+
   return (
-    <BrowserRouter>
+    <>
       <Toaster position="top-right" />
       <Routes>
         <Route path="/login" element={<Login />} />
         <Route path="/signup" element={<SignUp />} />
+        <Route path="/forgot-password" element={<ForgotPassword />} />
+        <Route path="/session-expired" element={<SessionExpired />} />
 
         <Route element={<ProtectedLayout />}>
           <Route path="/" element={<Dashboard />} />
@@ -108,6 +145,16 @@ function App() {
 
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
+    </>
+  );
+}
+
+function App() {
+  return (
+    <BrowserRouter>
+      <AuthProvider>
+        <AppContent />
+      </AuthProvider>
     </BrowserRouter>
   );
 }

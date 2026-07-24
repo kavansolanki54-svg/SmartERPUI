@@ -1,26 +1,17 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 
 const Header = ({ onToggleSidebar }) => {
-  const [user, setUser] = useState({ userName: 'Alex Rivera', roleName: 'Admin' });
+  const { user, logout } = useAuth();
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const navigate = useNavigate();
 
-  useEffect(() => {
-    const userStr = localStorage.getItem('user');
-    if (userStr) {
-      const u = JSON.parse(userStr);
-      setUser({
-        userName: u.userName || 'Alex Rivera',
-        roleName: u.roleName || (u.roleType ? u.roleType : 'Admin')
-      });
-    }
-  }, []);
+  const userName = user?.userName || 'Alex Rivera';
+  const roleName = user?.roleName || (user?.roleType ? user.roleType : 'Admin');
 
-  const handleLogout = () => {
-    localStorage.removeItem('token');
-    localStorage.removeItem('refreshToken');
-    localStorage.removeItem('user');
+  const handleLogout = async () => {
+    await logout();
     navigate('/login');
   };
 
@@ -46,8 +37,8 @@ const Header = ({ onToggleSidebar }) => {
             className="header-profile-trigger"
           >
             <div className="header-user-info" style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
-              <span style={{ fontSize: '14px', fontWeight: '600', color: 'var(--color-on-surface)' }}>{user.userName}</span>
-              <span style={{ fontSize: '12px', color: 'var(--color-on-surface-variant)' }}>{user.roleName}</span>
+              <span style={{ fontSize: '14px', fontWeight: '600', color: 'var(--color-on-surface)' }}>{userName}</span>
+              <span style={{ fontSize: '12px', color: 'var(--color-on-surface-variant)' }}>{roleName}</span>
             </div>
             <i className={`fa-solid fa-chevron-${isProfileOpen ? 'up' : 'down'}`} style={{ fontSize: '12px', color: 'var(--color-outline)', marginLeft: '4px' }}></i>
           </div>
